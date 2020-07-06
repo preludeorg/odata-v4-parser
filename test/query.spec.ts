@@ -26,12 +26,19 @@ describe('Query Test Suite', () => {
     expect(parser.query('$top=1').value.options[0].value.raw).toEqual('1');
   });
 
+  it('should parse $top and $skip', () => {
+    expect(parser.query('$top=1&$skip=120').value.options[0].value.raw).toEqual('1');
+  });
 
   it('should parse $select', () => {
     expect(parser.query('$select=A').value.options[0].value.items[0].value.raw).toEqual('A');
     expect(parser.query('$select=*').value.options[0].value.items[0].value.value).toEqual('*');
     expect(parser.query('$select=A,B,C').value.options[0].value.items.map((v) => v.value.value.value.name)).toStrictEqual(['A', 'B', 'C']);
   });
+
+  // it('should parser $query', () => {
+  //   parser.query('/Category/$query');
+  // });
 
 
 });

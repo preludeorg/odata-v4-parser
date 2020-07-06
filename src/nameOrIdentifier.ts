@@ -1,9 +1,9 @@
-import Utils from './utils';
-import Lexer from './lexer';
+import Utils, { SourceArray } from './utils';
+import * as Lexer from './lexer';
 import PrimitiveLiteral from './primitiveLiteral';
 
 export namespace NameOrIdentifier {
-  export function enumeration(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function enumeration(value: SourceArray, index: number): Lexer.Token {
     const type = qualifiedEnumTypeName(value, index);
     if (!type) { return; }
     const start = index;
@@ -26,7 +26,7 @@ export namespace NameOrIdentifier {
       value: enumVal
     }, Lexer.TokenType.Enum);
   }
-  export function enumValue(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function enumValue(value: SourceArray, index: number): Lexer.Token {
     let val = NameOrIdentifier.singleEnumValue(value, index);
     if (!val) { return; }
     const start = index;
@@ -44,25 +44,25 @@ export namespace NameOrIdentifier {
 
     return Lexer.tokenize(value, start, index, { values: arr }, Lexer.TokenType.EnumValue);
   }
-  export function singleEnumValue(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function singleEnumValue(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.enumerationMember(value, index) ||
       NameOrIdentifier.enumMemberValue(value, index);
   }
-  export function enumMemberValue(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function enumMemberValue(value: SourceArray, index: number): Lexer.Token {
     const token = PrimitiveLiteral.int64Value(value, index);
     if (token) {
       token.type = Lexer.TokenType.EnumMemberValue;
       return token;
     }
   }
-  export function singleQualifiedTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function singleQualifiedTypeName(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.qualifiedEntityTypeName(value, index) ||
       NameOrIdentifier.qualifiedComplexTypeName(value, index) ||
       NameOrIdentifier.qualifiedTypeDefinitionName(value, index) ||
       NameOrIdentifier.qualifiedEnumTypeName(value, index) ||
       NameOrIdentifier.primitiveTypeName(value, index);
   }
-  export function qualifiedTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function qualifiedTypeName(value: SourceArray, index: number): Lexer.Token {
     if (Utils.equals(value, index, 'Collection')) {
       const start = index;
       index += 10;
@@ -85,7 +85,7 @@ export namespace NameOrIdentifier {
       token.type = Lexer.TokenType.Collection;
     } else { return NameOrIdentifier.singleQualifiedTypeName(value, index); }
   }
-  export function qualifiedEntityTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function qualifiedEntityTypeName(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const start = index;
     const namespaceNext = NameOrIdentifier.namespace(value, index);
 
@@ -100,7 +100,7 @@ export namespace NameOrIdentifier {
 
     return Lexer.tokenize(value, start, name.next, name, Lexer.TokenType.QualifiedEntityTypeName);
   }
-  export function qualifiedComplexTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function qualifiedComplexTypeName(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const start = index;
     const namespaceNext = NameOrIdentifier.namespace(value, index);
     if (namespaceNext === index || value[namespaceNext] !== 0x2e) { return; }
@@ -114,7 +114,7 @@ export namespace NameOrIdentifier {
 
     return Lexer.tokenize(value, start, name.next, name, Lexer.TokenType.QualifiedComplexTypeName);
   }
-  export function qualifiedTypeDefinitionName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function qualifiedTypeDefinitionName(value: SourceArray, index: number): Lexer.Token {
     const start = index;
     const namespaceNext = NameOrIdentifier.namespace(value, index);
     if (namespaceNext === index || value[namespaceNext] !== 0x2e) { return; }
@@ -123,7 +123,7 @@ export namespace NameOrIdentifier {
 
     return Lexer.tokenize(value, start, nameNext.next, 'TypeDefinitionName', Lexer.TokenType.Identifier);
   }
-  export function qualifiedEnumTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function qualifiedEnumTypeName(value: SourceArray, index: number): Lexer.Token {
     const start = index;
     const namespaceNext = NameOrIdentifier.namespace(value, index);
     if (namespaceNext === index || value[namespaceNext] !== 0x2e) { return; }
@@ -132,7 +132,7 @@ export namespace NameOrIdentifier {
 
     return Lexer.tokenize(value, start, nameNext.next, 'EnumTypeName', Lexer.TokenType.Identifier);
   }
-  export function namespace(value: Utils.SourceArray, index: number): number {
+  export function namespace(value: SourceArray, index: number): number {
     let part = NameOrIdentifier.namespacePart(value, index);
     while (part && part.next > index) {
       index = part.next;
@@ -145,7 +145,7 @@ export namespace NameOrIdentifier {
 
     return index - 1;
   }
-  export function odataIdentifier(value: Utils.SourceArray, index: number, tokenType?: Lexer.TokenType): Lexer.Token {
+  export function odataIdentifier(value: SourceArray, index: number, tokenType?: Lexer.TokenType): Lexer.Token {
     const start = index;
     if (Lexer.identifierLeadingCharacter(value[index])) {
       index++;
@@ -156,10 +156,10 @@ export namespace NameOrIdentifier {
 
     if (index > start) { return Lexer.tokenize(value, start, index, { name: Utils.stringify(value, start, index) }, tokenType || Lexer.TokenType.ODataIdentifier); }
   }
-  export function namespacePart(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function namespacePart(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.NamespacePart);
   }
-  export function entitySetName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function entitySetName(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntitySetName);
     if (!token) { return; }
 
@@ -185,10 +185,10 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function singletonEntity(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function singletonEntity(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.SingletonEntity);
   }
-  export function entityTypeName(value: Utils.SourceArray, index: number, schema?: any): Lexer.Token {
+  export function entityTypeName(value: SourceArray, index: number, schema?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityTypeName);
     if (!token) { return; }
 
@@ -200,7 +200,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexTypeName(value: Utils.SourceArray, index: number, schema?: any): Lexer.Token {
+  export function complexTypeName(value: SourceArray, index: number, schema?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexTypeName);
     if (!token) { return; }
 
@@ -212,19 +212,19 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function typeDefinitionName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function typeDefinitionName(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TypeDefinitionName);
   }
-  export function enumerationTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function enumerationTypeName(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationTypeName);
   }
-  export function enumerationMember(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function enumerationMember(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationMember);
   }
-  export function termName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function termName(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TermName);
   }
-  export function primitiveTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function primitiveTypeName(value: SourceArray, index: number): Lexer.Token {
     if (!Utils.equals(value, index, 'Edm.')) { return; }
     const start = index;
     index += 4;
@@ -290,7 +290,7 @@ export namespace NameOrIdentifier {
     }
     return root.dataServices || root;
   }
-  export function primitiveProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveProperty);
     if (!token) { return; }
 
@@ -314,15 +314,15 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function primitiveKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveKeyProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.primitiveProperty(value, index, metadataContext);
     if (token && token.type === Lexer.TokenType.PrimitiveKeyProperty) { return token; }
   }
-  export function primitiveNonKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveNonKeyProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.primitiveProperty(value, index, metadataContext);
     if (token && token.type === Lexer.TokenType.PrimitiveProperty) { return token; }
   }
-  export function primitiveColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveColProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionProperty);
     if (!token) { return; }
 
@@ -346,7 +346,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function complexProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexProperty);
     if (!token) { return; }
 
@@ -372,7 +372,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function complexColProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionProperty);
     if (!token) { return; }
 
@@ -398,7 +398,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function streamProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function streamProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.StreamProperty);
     if (!token) { return; }
 
@@ -418,11 +418,11 @@ export namespace NameOrIdentifier {
     return token;
   }
 
-  export function navigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function navigationProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     return NameOrIdentifier.entityNavigationProperty(value, index, metadataContext) ||
       NameOrIdentifier.entityColNavigationProperty(value, index, metadataContext);
   }
-  export function entityNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function entityNavigationProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityNavigationProperty);
     if (!token) { return; }
 
@@ -445,7 +445,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function entityColNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function entityColNavigationProperty(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionNavigationProperty);
     if (!token) { return; }
 
@@ -469,7 +469,7 @@ export namespace NameOrIdentifier {
     return token;
   }
 
-  export function action(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function action(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.Action);
     if (!token) { return; }
 
@@ -480,7 +480,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function actionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function actionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ActionImport);
     if (!token) { return; }
 
@@ -492,7 +492,7 @@ export namespace NameOrIdentifier {
     return token;
   }
 
-  export function odataFunction(value: Utils.SourceArray, index: number): Lexer.Token {
+  export function odataFunction(value: SourceArray, index: number): Lexer.Token {
     return NameOrIdentifier.entityFunction(value, index) ||
       NameOrIdentifier.entityColFunction(value, index) ||
       NameOrIdentifier.complexFunction(value, index) ||
@@ -551,7 +551,7 @@ export namespace NameOrIdentifier {
 
     return type;
   }
-  export function entityFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function entityFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityFunction);
     if (!token) { return; }
 
@@ -563,7 +563,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function entityColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function entityColFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionFunction);
     if (!token) { return; }
 
@@ -575,7 +575,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function complexFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexFunction);
     if (!token) { return; }
 
@@ -587,7 +587,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function complexColFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionFunction);
     if (!token) { return; }
 
@@ -599,7 +599,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function primitiveFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function primitiveFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveFunction);
     if (!token) { return; }
 
@@ -611,7 +611,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function primitiveColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+  export function primitiveColFunction(value: SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionFunction);
     if (!token) { return; }
 
@@ -684,7 +684,7 @@ export namespace NameOrIdentifier {
 
     return type;
   }
-  export function entityFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function entityFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityFunctionImport);
     if (!token) { return; }
 
@@ -696,7 +696,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function entityColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function entityColFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionFunctionImport);
     if (!token) { return; }
 
@@ -708,7 +708,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function complexFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexFunctionImport);
     if (!token) { return; }
 
@@ -720,7 +720,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function complexColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function complexColFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionFunctionImport);
     if (!token) { return; }
 
@@ -732,7 +732,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function primitiveFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveFunctionImport);
     if (!token) { return; }
 
@@ -744,7 +744,7 @@ export namespace NameOrIdentifier {
 
     return token;
   }
-  export function primitiveColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+  export function primitiveColFunctionImport(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
     const token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionFunctionImport);
     if (!token) { return; }
 

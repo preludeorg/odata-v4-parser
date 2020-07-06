@@ -33,6 +33,8 @@ describe('ResourcePath Test Suite', () => {
 
     parser.resourcePath('Categories(123)/A');
     parser.resourcePath('/Categories(123)/A');
+    parser.resourcePath('/Categories(0)/$ref');
+    parser.resourcePath('/Categories(0)/Product/$ref');
 
   });
 
