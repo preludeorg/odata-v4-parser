@@ -12,3 +12,5 @@ OData v4 parser based on OASIS Standard OData v4 ABNF grammar
 const parser = require('odata-v4-parser');
 parser.filter("Title eq 'Article1'");
 ```
+
+## [CHANGELOG](./CHANGELOG)
