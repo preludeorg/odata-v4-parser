@@ -1,4 +1,6 @@
 import { Parser } from '../src/parser';
+import { findOne } from '../src/utils';
+import { TokenType } from '../src/lexer';
 
 describe('Query Test Suite', () => {
 
@@ -58,12 +60,9 @@ describe('Query Test Suite', () => {
 
 
   it('should parse $count', () => {
-    parser.query('$count=true');
+    const ast = parser.query('$count=true');
+    const node = findOne(ast, TokenType.InlineCount);
+    expect(node).not.toBeUndefined();
   });
-
-  // it('should parser $query', () => {
-  //   parser.query('/Category/$query');
-  // });
-
 
 });

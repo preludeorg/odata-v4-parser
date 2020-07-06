@@ -1,3 +1,7 @@
+import { Token, TokenType } from './lexer';
+import { forEach, isArray } from '@newdash/newdash';
+import { isPlainObject } from '@newdash/newdash/isPlainObject';
+
 export type SourceArray = number[] | Uint16Array;
 
 export function stringify(value: SourceArray, index: number, next: number): string {
@@ -29,6 +33,50 @@ export function required(value: SourceArray, index: number, comparer: Function, 
   }
 
   return i >= (min || 0) && i <= max ? index + i : 0;
+}
+
+export type Traverser = { [key in TokenType]?: (token: Token) => void }
+
+export function createTraverser(traverser: Traverser) {
+  return function t(node: Token | Array<any> | Object): void {
+
+    if (node instanceof Token) {
+      if (node.type in traverser) {
+        traverser[node.type](node);
+      }
+    }
+
+    if (isPlainObject(node) || isArray(node) || node instanceof Token) {
+      // @ts-ignore
+      forEach(node, (item) => {
+        t(item);
+      });
+    }
+
+
+  };
+}
+
+/**
+ * find one node by type
+ * @param node
+ * @param type
+ */
+export function findOne(node: Token, type: TokenType): Token {
+  let rt: Token;
+  createTraverser({ [type]: (v: Token) => { rt = v; } })(node);
+  return rt;
+}
+
+/**
+ * find all nodes by type
+ * @param node
+ * @param type
+ */
+export function findAll(node: Token, type: TokenType): Array<Token> {
+  const rt: Array<Token> = [];
+  createTraverser({ [type]: (v: Token) => { rt.push(v); } })(node);
+  return rt;
 }
 
 export default { stringify, is, equals, required };

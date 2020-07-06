@@ -38,5 +38,8 @@
     "typedoc-default-themes": "^0.5.0",
     "typedoc-plugin-external-module-name": "^1.1.1",
     "typescript": "^3.9.6"
+  },
+  "dependencies": {
+    "@newdash/newdash": "^5.10.0"
   }
 }
