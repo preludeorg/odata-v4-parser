@@ -1,11 +1,22 @@
 {
     "compilerOptions": {
         "outDir": "lib",
+        "allowJs": true,
         "module": "commonjs",
-        "target": "es5",
+        "target": "ES6",
         "declaration": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "newLine": "lf",
+        "resolveJsonModule": true,
+        "lib": [
+            "ES2015",
+            "ES2016",
+            "ES2017"
+        ]
     },
+    "include": [
+        "src"
+    ],
     "exclude": [
         "lib",
         "node_modules"
