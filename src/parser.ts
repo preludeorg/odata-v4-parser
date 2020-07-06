@@ -1,5 +1,6 @@
 import * as Lexer from './lexer';
-import PrimitiveLiteral from './primitiveLiteral';
+import * as PrimitiveLiteral from './primitiveLiteral';
+
 import * as Expressions from './expressions';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';

@@ -1,7 +1,8 @@
 import Utils, { SourceArray } from './utils';
 import * as Lexer from './lexer';
-import PrimitiveLiteral from './primitiveLiteral';
-import NameOrIdentifier from './nameOrIdentifier';
+import * as PrimitiveLiteral from './primitiveLiteral';
+
+import * as NameOrIdentifier from './nameOrIdentifier';
 import * as ArrayOrObject from './json';
 
 export function commonExpr(value: SourceArray, index: number): Lexer.Token {

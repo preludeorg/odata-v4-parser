@@ -1,5 +1,5 @@
 // @ts-nocheck
-import PrimitiveLiteral from '../src/primitiveLiteral';
+import * as PrimitiveLiteral from '../src/primitiveLiteral';
 import cases from './primitive-cases';
 
 describe('Primitive literals from json', () => {
