@@ -1,5 +1,8 @@
-src/*.js
 coverage
 docs
 report
 *.log*
+test
+.vscode
+.github
+jest.config.js
