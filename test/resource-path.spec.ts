@@ -1,4 +1,6 @@
 import { Parser } from '../src/parser';
+import { findAll, findOne } from '../src/utils';
+import { TokenType } from '../src/lexer';
 
 
 describe('ResourcePath Test Suite', () => {
@@ -31,10 +33,22 @@ describe('ResourcePath Test Suite', () => {
 
   it('should parse collection with path', () => {
 
-    parser.resourcePath('Categories(123)/A');
+    expect(findOne(parser.resourcePath('Categories(123)/A'), TokenType.KeyPropertyValue).raw)
+      .toEqual('123');
+
     parser.resourcePath('/Categories(123)/A');
     parser.resourcePath('/Categories(0)/$ref');
     parser.resourcePath('/Categories(0)/Product/$ref');
+
+  });
+
+  it('should parse function call', () => {
+
+    // function call is similar to collection resource
+
+    parser.resourcePath('/ProductsByCategoryId(categoryId=2)');
+
+    parser.resourcePath('/ProductsByCategoryId');
 
   });
 

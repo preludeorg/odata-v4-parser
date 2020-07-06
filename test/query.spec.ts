@@ -1,6 +1,7 @@
 import { Parser } from '../src/parser';
-import { findOne } from '../src/utils';
+import { findOne, findAll } from '../src/utils';
 import { TokenType } from '../src/lexer';
+import { get } from '@newdash/newdash';
 
 describe('Query Test Suite', () => {
 
@@ -35,7 +36,11 @@ describe('Query Test Suite', () => {
   it('should parse $select', () => {
     expect(parser.query('$select=A').value.options[0].value.items[0].value.raw).toEqual('A');
     expect(parser.query('$select=*').value.options[0].value.items[0].value.value).toEqual('*');
-    expect(parser.query('$select=A,B,C').value.options[0].value.items.map((v) => v.value.value.value.name)).toStrictEqual(['A', 'B', 'C']);
+    expect(
+      findAll(parser.query('$select=A,B,C'), TokenType.SelectPath)
+        .map((node) => get(node, 'value.value.name'))
+    ).toStrictEqual(['A', 'B', 'C']);
+
     parser.query('$select=A/B');
   });
 
