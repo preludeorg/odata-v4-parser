@@ -119,6 +119,11 @@ export namespace Query {
     const star = Lexer.STAR(value, index);
     if (star) {
       index = star;
+
+      if (index == value.length) {
+        return Lexer.tokenize(value, start, index, { path: '*' }, Lexer.TokenType.ExpandItem);
+      }
+
       const ref = Expressions.refExpr(value, index);
       if (ref) {
         index = ref.next;

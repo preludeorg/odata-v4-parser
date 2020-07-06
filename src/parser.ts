@@ -4,6 +4,7 @@ import Expressions from './expressions';
 import Query from './query';
 import ResourcePath from './resourcePath';
 import ODataUri from './odataUri';
+import ArrayOrObject from './json';
 
 export const parserFactory = function(fn) {
   return function(source, options) {
@@ -38,6 +39,9 @@ export class Parser {
   }
   literal(source: string, options?: any): Lexer.Token {
     return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options);
+  }
+  arrayOrObject(source: string, index?: number): Lexer.Token {
+    return parserFactory(ArrayOrObject.arrayOrObject)(source, index);
   }
 }
 

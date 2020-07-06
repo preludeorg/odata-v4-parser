@@ -1,4 +1,4 @@
-import { Parser, parserFactory } from '../src/parser';
+import { Parser } from '../src/parser';
 
 describe('Parser', () => {
 
@@ -42,20 +42,5 @@ describe('Parser', () => {
     } catch (err) { }
     expect(error).toBeFalsy();
   });
-
-  // cases.forEach((c) => {
-  //   const parser = new Parser();
-  //   const rule = c['-Rule'];
-  //   if (rule == 'filter' || rule == 'queryOptions') {
-  //     it(`should pass ${c['-Name']}`, () => {
-  //       if (c['-FailAt']) {
-  //         expect(() => { parser.query(c['Input']); }).toThrow();
-  //       } else {
-  //         parser.query(c['Input']);
-  //       }
-  //     });
-
-  //   }
-  // });
 
 });
