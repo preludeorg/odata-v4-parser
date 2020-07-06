@@ -1,9 +1,10 @@
 name: Publish NPM Module
 
-on:
-  release:
-    types: [published]
-
+on: 
+  push:
+      tags:
+          - '*'
+          
 jobs:
   build:
     runs-on: ubuntu-latest
