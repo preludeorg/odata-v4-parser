@@ -15,4 +15,4 @@ const parser = new Parser()
 parser.filter("Title eq 'Article1'");
 ```
 
-## [CHANGELOG](./CHANGELOG)
+## [CHANGELOG](./CHANGELOG.md)
