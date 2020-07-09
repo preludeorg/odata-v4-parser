@@ -10,7 +10,8 @@ OData v4 parser based on OASIS Standard OData v4 ABNF grammar
 ## Usage
 
 ```js
-const parser = require('odata-v4-parser');
+const { Parser } = require('odata-v4-parser');
+const parser = new Parser()
 parser.filter("Title eq 'Article1'");
 ```
 

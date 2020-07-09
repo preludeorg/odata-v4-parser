@@ -3,7 +3,7 @@
         "outDir": "lib",
         "allowJs": true,
         "module": "commonjs",
-        "target": "ES6",
+        "target": "ES2016",
         "declaration": true,
         "sourceMap": true,
         "newLine": "lf",

@@ -4,6 +4,9 @@
   "description": "OData(v4) Parser",
   "main": "lib/parser.js",
   "typings": "lib/parser.d.ts",
+  "engines": {
+    "node": ">=10"
+  },
   "contributors": [
     {
       "name": "Theo Sun",
