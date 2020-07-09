@@ -1,6 +1,5 @@
 import { Token, TokenType } from './lexer';
-import { forEach, isArray } from '@newdash/newdash';
-import { isPlainObject } from '@newdash/newdash/isPlainObject';
+import { createTraverser } from './visitor';
 
 export type SourceArray = number[] | Uint16Array;
 
@@ -35,30 +34,10 @@ export function required(value: SourceArray, index: number, comparer: Function, 
   return i >= (min || 0) && i <= max ? index + i : 0;
 }
 
-export type Traverser = { [key in TokenType]?: (token: Token) => void }
-
-export function createTraverser(traverser: Traverser) {
-  return function t(node: Token | Array<any> | Object): void {
-
-    if (node instanceof Token) {
-      if (node.type in traverser) {
-        traverser[node.type](node);
-      }
-    }
-
-    if (isPlainObject(node) || isArray(node) || node instanceof Token) {
-      // @ts-ignore
-      forEach(node, (item) => {
-        t(item);
-      });
-    }
-
-
-  };
-}
 
 /**
- * find one node by type
+ * find one node in ast node by type
+ *
  * @param node
  * @param type
  */
@@ -69,7 +48,8 @@ export function findOne(node: Token, type: TokenType): Token {
 }
 
 /**
- * find all nodes by type
+ * find all nodes in ast node by type
+ *
  * @param node
  * @param type
  */

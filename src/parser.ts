@@ -21,7 +21,16 @@ export const parserFactory = function(fn) {
   };
 };
 
+/**
+ * odata uri parser
+ */
 export class Parser {
+  /**
+   * parser ast node with full odata uri
+   *
+   * @param source
+   * @param options
+   */
   odataUri(source: string, options?: any): Lexer.Token {
     return parserFactory(ODataUri.odataUri)(source, options);
   }
