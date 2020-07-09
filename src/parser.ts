@@ -1,6 +1,5 @@
 import * as Lexer from './lexer';
 import * as PrimitiveLiteral from './primitiveLiteral';
-
 import * as Expressions from './expressions';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';
@@ -64,3 +63,5 @@ export function keys(source: string, options?: any): Lexer.Token {
 export function literal(source: string, options?: any): Lexer.Token {
   return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options);
 }
+
+export * from './types';
