@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.36](https://github.com/Soontao/odata-v4-parser/compare/v0.1.35...v0.1.36) (2020-07-09)
+
+
+### Features
+
+* **visitor:** deep first traverse ([8bd49bf](https://github.com/Soontao/odata-v4-parser/commit/8bd49bfa37ec419419c6336ae36bb216abdca79d))
+
 ### [0.1.35](https://github.com/Soontao/odata-v4-parser/compare/v0.1.34...v0.1.35) (2020-07-09)
 
 
