@@ -4,7 +4,7 @@ describe('Visitor Parse Suite', () => {
 
   const createSeqTokenProcessor = (key: string, arr: Array<any>) => () => arr.push(key);
 
-  const createSeqTraverser = () => {
+  const createSeqTraverser = (deepFirst = false) => {
     const visitSequence = [];
 
     const visit = createTraverser({
@@ -19,9 +19,9 @@ describe('Visitor Parse Suite', () => {
       AndExpression: createSeqTokenProcessor('and', visitSequence),
       BoolParenExpression: createSeqTokenProcessor('paren', visitSequence),
       EqualsExpression: createSeqTokenProcessor('eq', visitSequence),
-      Literal: createSeqTokenProcessor('lit', visitSequence),
-      FirstMemberExpression: createSeqTokenProcessor('mem', visitSequence)
-    });
+      OrExpression: createSeqTokenProcessor('or', visitSequence),
+      Literal: createSeqTokenProcessor('lit', visitSequence)
+    }, deepFirst);
 
     return { visit, visitSequence };
   };
@@ -29,11 +29,25 @@ describe('Visitor Parse Suite', () => {
 
   it('should visit filter', () => {
 
-    const expectedSeq = ['and', 'paren', 'eq', 'mem', 'lit', 'paren', 'eq', 'mem', 'lit'];
+    const expectedSeq = ['and', 'paren', 'eq', 'lit', 'paren', 'eq', 'lit'];
 
     const { visit, visitSequence } = createSeqTraverser();
 
     const node = defaultParser.filter('(A eq 2) and (V eq 3)');
+
+    visit(node);
+
+    expect(visitSequence).toEqual(expectedSeq);
+
+  });
+
+  it('should visit filter deep first', () => {
+
+    const expectedSeq = ['lit', 'eq', 'lit', 'eq', 'or', 'paren', 'lit', 'eq', 'paren', 'and'];
+
+    const { visit, visitSequence } = createSeqTraverser(true);
+
+    const node = defaultParser.filter('(A eq 2 or A eq 3) and (V eq 3)');
 
     visit(node);
 

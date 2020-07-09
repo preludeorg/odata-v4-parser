@@ -35,10 +35,32 @@ export function traverseAst(traverser: Traverser, node: Token | Array<any> | Obj
       traverseAst(traverser, item);
     });
   }
+
 }
 
-export function createTraverser(traverser: Traverser) {
-  return function t(node: Token | Array<any> | Object): void {
-    traverseAst(traverser, node);
+export function traverseAstDeepFirst(traverser: Traverser, node: Token | Array<any> | Object): void {
+
+  if (isPlainObject(node) || isArray(node) || node instanceof Token) {
+    // @ts-ignore
+    forEach(node, (item) => {
+      traverseAstDeepFirst(traverser, item);
+    });
+  }
+
+  if (node instanceof Token) {
+    if (node.type in traverser) {
+      traverser[node.type](node);
+    }
+  }
+
+}
+
+export function createTraverser(traverser: Traverser, deepFirst = false) {
+  return (node: Token | Array<any> | Object): void => {
+    if (deepFirst) {
+      traverseAstDeepFirst(traverser, node);
+    } else {
+      traverseAst(traverser, node);
+    }
   };
 }
