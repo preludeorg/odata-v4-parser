@@ -3,6 +3,7 @@ import { findOne, findAll } from '../src/utils';
 import { TokenType } from '../src/lexer';
 import { get } from '@newdash/newdash';
 import { defaultParser } from '../src';
+import { execPath } from 'process';
 
 describe('Query Test Suite', () => {
 
@@ -68,6 +69,14 @@ describe('Query Test Suite', () => {
     const ast = parser.query('$count=true');
     const node = findOne(ast, TokenType.InlineCount);
     expect(node).not.toBeUndefined();
+  });
+
+  it('should parse $filter only', () => {
+    const ast = defaultParser.query('$filter=id eq 1');
+    expect(ast).not.toBeUndefined();
+    expect(ast.value.options).not.toBeUndefined();
+    expect(ast.value.options).toHaveLength(1);
+
   });
 
 });

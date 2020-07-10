@@ -24,37 +24,37 @@ export type Visitor = Traverser
 export function traverseAst(traverser: Traverser, node: Token, parent?: Token): void {
 
   if (node instanceof Token) {
-    if (node.type in traverser) {
-      traverser[node.type](node, parent);
+    if (node?.type in traverser) {
+      traverser[node?.type](node, parent);
     }
   }
 
-  if (isArray(node.value) || isPlainObject(node.value)) {
-    forEach(node.value, (item) => {
+  if (isArray(node?.value) || isPlainObject(node?.value)) {
+    forEach(node?.value, (item) => {
       if (item instanceof Token) {
         traverseAst(traverser, item, node);
       }
     });
   }
 
-  if (isArray(node.value?.options)) {
-    forEach(node.value?.options, (item) => {
+  if (isArray(node?.value?.options)) {
+    forEach(node?.value?.options, (item) => {
       if (item instanceof Token) {
         traverseAst(traverser, item, node);
       }
     });
   }
 
-  if (isArray(node.value?.items)) {
-    forEach(node.value?.items, (item) => {
+  if (isArray(node?.value?.items)) {
+    forEach(node?.value?.items, (item) => {
       if (item instanceof Token) {
         traverseAst(traverser, item, node);
       }
     });
   }
 
-  if (node.value instanceof Token) {
-    traverseAst(traverser, node.value, node);
+  if (node?.value instanceof Token) {
+    traverseAst(traverser, node?.value, node);
   }
 
 }
@@ -68,28 +68,28 @@ export function traverseAst(traverser: Traverser, node: Token, parent?: Token): 
  */
 export function traverseAstDeepFirst(traverser: Traverser, node: Token, parent?: Token): void {
 
-  if (isArray(node.value) || isPlainObject(node.value)) {
-    forEach(node.value, (item) => {
+  if (isArray(node?.value) || isPlainObject(node?.value)) {
+    forEach(node?.value, (item) => {
       if (item instanceof Token) {
         traverseAstDeepFirst(traverser, item, node);
       }
     });
   }
 
-  if (node.value instanceof Token) {
-    traverseAstDeepFirst(traverser, node.value, node);
+  if (node?.value instanceof Token) {
+    traverseAstDeepFirst(traverser, node?.value, node);
   }
 
-  if (isArray(node.value?.options)) {
-    forEach(node.value?.options, (item) => {
+  if (isArray(node?.value?.options)) {
+    forEach(node?.value?.options, (item) => {
       if (item instanceof Token) {
         traverseAstDeepFirst(traverser, item, node);
       }
     });
   }
 
-  if (isArray(node.value?.items)) {
-    forEach(node.value?.items, (item) => {
+  if (isArray(node?.value?.items)) {
+    forEach(node?.value?.items, (item) => {
       if (item instanceof Token) {
         traverseAstDeepFirst(traverser, item, node);
       }
@@ -97,7 +97,7 @@ export function traverseAstDeepFirst(traverser: Traverser, node: Token, parent?:
   }
 
   if (node instanceof Token) {
-    if (node.type in traverser) {
+    if (node?.type in traverser) {
       traverser[node.type](node, parent);
     }
   }
