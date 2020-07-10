@@ -1,6 +1,6 @@
 {
   "name": "@odata/parser",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "OData(v4) Parser",
   "main": "lib/index",
   "typings": "lib/index.d.ts",
