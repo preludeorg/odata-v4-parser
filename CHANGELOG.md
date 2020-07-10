@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.38](https://github.com/Soontao/odata-v4-parser/compare/v0.1.37...v0.1.38) (2020-07-10)
+
+
+### Bug Fixes
+
+* visit undefine object will throw error ([8c37045](https://github.com/Soontao/odata-v4-parser/commit/8c37045f3734950fad052369b77e83d0571e240e))
+
 ### [0.1.37](https://github.com/Soontao/odata-v4-parser/compare/v0.1.36...v0.1.37) (2020-07-10)
 
 
