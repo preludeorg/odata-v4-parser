@@ -2,7 +2,7 @@ import { Parser } from '../src/parser';
 import { findOne, findAll } from '../src/utils';
 import { TokenType } from '../src/lexer';
 import { get } from '@newdash/newdash';
-import { defaultParser } from '../src';
+import { defaultParser, ODataParam } from '../src';
 import { execPath } from 'process';
 
 describe('Query Test Suite', () => {
@@ -10,11 +10,11 @@ describe('Query Test Suite', () => {
   const parser = new Parser();
 
   const expands = [
-    ['$expand=A', 'A'],
-    ['$expand=A/V', 'A/V'],
-    ['$expand=A/B/C', 'A/B/C'],
-    ['$expand=A,B/C', 'A'],
-    ['$expand=*', '*']
+    [ODataParam.New().expand('A').toString(), 'A'],
+    [ODataParam.New().expand('A/V').toString(), 'A/V'],
+    [ODataParam.New().expand('A/B/C').toString(), 'A/B/C'],
+    [ODataParam.New().expand(['A', 'B/C']).toString(), 'A'],
+    [ODataParam.New().expand('*').toString(), '*']
   ];
 
   expands.forEach(([original, parsed]) => {
@@ -64,7 +64,6 @@ describe('Query Test Suite', () => {
     parser.query('$format=atom');
   });
 
-
   it('should parse $count', () => {
     const ast = parser.query('$count=true');
     const node = findOne(ast, TokenType.InlineCount);
@@ -76,6 +75,19 @@ describe('Query Test Suite', () => {
     expect(ast).not.toBeUndefined();
     expect(ast.value.options).not.toBeUndefined();
     expect(ast.value.options).toHaveLength(1);
+
+  });
+
+  it('should parse complex uri', () => {
+
+    const u1 = ODataParam.New().top(1).skip(10).select(['A', 'B']).format('json').expand('F1,F2').toString();
+    const ast = defaultParser.query(u1);
+
+    expect(findOne(ast, TokenType.Top).value.raw).toBe('1');
+    expect(findOne(ast, TokenType.Skip).value.raw).toBe('10');
+
+    expect(findOne(ast, TokenType.Format).value.format).toBe('json');
+    expect(findOne(ast, TokenType.Expand).value.items.map((item) => item.raw)).toStrictEqual(['F1', 'F2']);
 
   });
 

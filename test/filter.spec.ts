@@ -1,16 +1,29 @@
 import { Parser } from '../src/parser';
+import { defaultParser, ODataFilter, ODataDateTimeV4 } from '../src';
 
 
 describe('Filter Test Suite', () => {
 
-  const parser = new Parser();
-
   it('should support simple eq', () => {
-    parser.query('$format=json&$filter=A eq 2');
+    defaultParser.query('$format=json&$filter=A eq 2');
   });
 
   it('should support complex query', () => {
-    parser.query('$format=json&$filter=(A eq 2) and (B eq 3 or B eq 4)');
+    defaultParser.query('$format=json&$filter=(A eq 2) and (B eq 3 or B eq 4)');
+  });
+
+  it('should support complex filter', () => {
+    const sFilter = ODataFilter.New()
+      .field('A').eq(1).field('A').eq(2)
+      .field('B').gt(3)
+      .field('C').between(1, 3)
+      .field('year(Date)').eq(2010)
+      .field('Date2').gt(ODataDateTimeV4.from('2020-07-30T03:16:27.023Z'))
+      .field('Date3').lt(ODataDateTimeV4.from(new Date()))
+      .toString();
+
+    defaultParser.filter(sFilter);
+
   });
 
 });
