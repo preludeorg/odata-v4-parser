@@ -24,6 +24,9 @@ class SearchParams {
     return coll.join('&');
   }
 
+  destroy() {
+    delete this._store;
+  }
 
 }
 
@@ -154,14 +157,10 @@ export class ODataQueryParam {
   /**
    * result format, please keep it as json
    *
-   * @param format deafult json
+   * @param format default json
    */
   format(format: 'json' | 'xml') {
-    if (format === 'json') {
-      this.$format = format;
-    } else {
-      throw new Error('light-odata doesnt support xml response');
-    }
+    this.$format = format;
     return this;
   }
 
@@ -173,8 +172,8 @@ export class ODataQueryParam {
    * @param value
    * @version 4.0.0
    */
-  search(value: string, fuzzy = true): this {
-    this.$search = fuzzy ? `%${value}%` : value;
+  search(value: string): this {
+    this.$search = value;
     return this;
   }
 

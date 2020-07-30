@@ -2,7 +2,7 @@ import { Parser } from '../src/parser';
 import { findOne, findAll } from '../src/utils';
 import { TokenType } from '../src/lexer';
 import { get } from '@newdash/newdash';
-import { defaultParser, ODataParam } from '../src';
+import { defaultParser, ODataParam, ODataFilter } from '../src';
 import { execPath } from 'process';
 
 describe('Query Test Suite', () => {
@@ -80,7 +80,16 @@ describe('Query Test Suite', () => {
 
   it('should parse complex uri', () => {
 
-    const u1 = ODataParam.New().top(1).skip(10).select(['A', 'B']).format('json').expand('F1,F2').toString();
+    const u1 = ODataParam.New()
+      .top(1)
+      .skip(10)
+      .select(['A', 'B'])
+      .orderbyMulti([{ field: 'C', order: 'asc' }, { field: 'D', order: 'desc' }])
+      .format('json')
+      .search('A')
+      .expand('F1,F2')
+      .filter(ODataFilter.New().field('A').eq(1).toString())
+      .toString();
     const ast = defaultParser.query(u1);
 
     expect(findOne(ast, TokenType.Top).value.raw).toBe('1');

@@ -1,54 +1,5 @@
 import join from '@newdash/newdash/join';
-
-export abstract class ODataDataObject {
-  abstract toString(): string;
-}
-
-export class ODataDateTimeV4 extends ODataDataObject {
-
-  private constructor(date: Date) {
-    super();
-    this._date = date;
-  }
-
-  static from(date: Date): ODataDateTimeV4;
-  static from(date: string): ODataDateTimeV4;
-  static from(date: any): ODataDateTimeV4 {
-    switch (typeof date) {
-      case 'string':
-        return new ODataDateTimeV4(new Date(date));
-      default:
-        return new ODataDateTimeV4(date);
-    }
-  }
-
-  private _date: Date
-
-  public toString(): string {
-    return `cast('${this._date.toISOString()}')`;
-  }
-
-}
-
-export class ODataDateTimeOffset extends ODataDataObject {
-
-  private constructor(date: Date) {
-    super();
-    this._date = date;
-  }
-
-  static from(date: Date): ODataDateTimeOffset {
-    const rt = new ODataDateTimeOffset(date);
-    return rt;
-  }
-
-  private _date: Date
-
-  public toString(): string {
-    return `cast('${this._date.toISOString()}',Edm.DateTimeOffset)`;
-  }
-
-}
+import { ODataDataObject } from './types';
 
 export enum ExprOperator {
   eq = 'eq',
@@ -191,10 +142,10 @@ class ODataFieldExpr {
    *
    * @param values
    */
-  in(values: string[] = []): ODataFilter {
+  in(values: Array<number | string | ODataDataObject> = []): ODataFilter {
     if (values.length > 0) {
       values.forEach((value) => {
-        this.eqString(value);
+        this.eq(value);
       });
     }
     return this._filter;
@@ -217,48 +168,6 @@ class ODataFieldExpr {
     } else {
       this.gt(low);
       this.lt(max);
-    }
-    return this._filter;
-  }
-
-  betweenDateTime(start?: Date, end?: Date, includeBoundary = true): ODataFilter {
-    if (start == undefined && end == undefined) {
-      throw new Error('You must give out the start or end date');
-    }
-    if (start instanceof Date) {
-      if (includeBoundary) {
-        this.ge(`datetime'${start.toISOString()}'`);
-      } else {
-        this.gt(`datetime'${start.toISOString()}'`);
-      }
-    }
-    if (end instanceof Date) {
-      if (includeBoundary) {
-        this.le(`datetime'${end.toISOString()}'`);
-      } else {
-        this.lt(`datetime'${end.toISOString()}'`);
-      }
-    }
-    return this._filter;
-  }
-
-  betweenDateTimeOffset(start?: Date, end?: Date, includeBoundary = true): ODataFilter {
-    if (start == undefined && end == undefined) {
-      throw new Error('You must give out the start or end date');
-    }
-    if (start instanceof Date) {
-      if (includeBoundary) {
-        this.ge(`datetimeoffset'${start.toISOString()}'`);
-      } else {
-        this.gt(`datetimeoffset'${start.toISOString()}'`);
-      }
-    }
-    if (end instanceof Date) {
-      if (includeBoundary) {
-        this.le(`datetimeoffset'${end.toISOString()}'`);
-      } else {
-        this.lt(`datetimeoffset'${end.toISOString()}'`);
-      }
     }
     return this._filter;
   }
@@ -294,140 +203,6 @@ export class ODataFilter {
     return new ODataFieldExpr(this, name, this.getExprMapping());
   }
 
-  /**
-   * The value of a field matches any value in the list.
-   *
-   * @deprecated please use filter.field().in()
-   * @param name
-   * @param values
-   */
-  fieldIn(name: string, values: string[]): this {
-    return this.fieldValueMatchArray(name, values);
-  }
-
-  /**
-   * The value of a field matches any value in the list.
-   *
-   * @deprecated please use filter.field().in()
-   * @param name
-   * @param values
-   */
-  fieldValueMatchArray(name: string, values: string[] = []): this {
-    if (values) {
-      values.forEach((value) => {
-        this.field(name).eqString(value);
-      });
-    }
-    return this;
-  }
-
-  /**
-   * DEPRECATED
-   *
-   * please use betweenDateTime/betweenDateTimeOffset
-   *
-   * @deprecated
-   * @param name
-   * @param start
-   * @param end
-   */
-  inPeriod(name: string, start: Date, end: Date): ODataFilter {
-    return this.betweenDateTime(name, start, end);
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param start
-   * @param end
-   */
-  betweenDateTime(name: string, start: Date, end: Date): ODataFilter {
-    if (start && end) {
-      return this.gtDateTime(name, start).ltDateTime(name, end);
-    }
-    throw new Error('You must give out the start and end date');
-
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param start
-   * @param end
-   */
-  betweenDateTimeOffset(name: string, start: Date, end: Date): ODataFilter {
-    if (start && end) {
-      return this.gtDateTimeOffset(name, start).ltDateTimeOffset(name, end);
-    }
-    throw new Error('You must give out the start and end date');
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param date
-   */
-  gtDateTime(name: string, date: Date): ODataFilter {
-    return this.field(name).gt(`datetime'${date.toISOString()}'`);
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param date
-   */
-  gtDateTimeOffset(name: string, date: Date): ODataFilter {
-    return this.field(name).gt(`datetimeoffset'${date.toISOString()}'`);
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param date
-   */
-  ltDateTime(name: string, date: Date): ODataFilter {
-    return this.field(name).lt(`datetime'${date.toISOString()}'`);
-  }
-
-  /**
-   * @deprecated
-   * @param name
-   * @param date
-   */
-  ltDateTimeOffset(name: string, date: Date): ODataFilter {
-    return this.field(name).lt(`datetimeoffset'${date.toISOString()}'`);
-  }
-
-  /**
-   * AND expr
-   *
-   * filter.field("A").eq("'a'").and().field("B").eq("'b").build() == "A eq 'a' and B eq 'b'"
-   *
-   * filter.field("A").eq("'a'").and("B eq 'b'").build() == "A eq 'a' and (B eq 'b')"
-   *
-   * @deprecated c4codata will auto detect connect operator between difference fields
-   * @param filter
-   */
-  and(filter?: string | ODataFilter): ODataFilter {
-    return this;
-  }
-
-  /**
-   * @deprecated c4codata will auto detect connect operator in same fields
-   * @param filter
-   */
-  or(filter?: string | ODataFilter): ODataFilter {
-    return this;
-  }
-
-  /**
-   * @deprecated c4codata will auto group exprs
-   * @param filter
-   */
-  group(filter: ODataFilter): ODataFilter {
-    this._fieldExprMappings = Object.assign(this._fieldExprMappings, filter.getExprMapping());
-    return this;
-  }
 
   toString(): string {
     return this.build();
