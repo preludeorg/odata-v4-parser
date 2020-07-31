@@ -1,0 +1,295 @@
+{
+    "dataServices": {
+        "schemas": [
+            {
+                "namespace": "Default",
+                "enumTypes": [],
+                "typeDefinitions": [],
+                "complexTypes": [],
+                "entityTypes": [
+                    {
+                        "name": "Class",
+                        "key": {
+                            "propertyRefs": [
+                                {
+                                    "name": "id"
+                                }
+                            ]
+                        },
+                        "openType": false,
+                        "hasStream": false,
+                        "properties": [
+                            {
+                                "name": "id",
+                                "type": "Edm.Int32",
+                                "nullable": false,
+                                "annotations": []
+                            },
+                            {
+                                "name": "name",
+                                "type": "Edm.String",
+                                "annotations": []
+                            },
+                            {
+                                "name": "desc",
+                                "type": "Edm.String",
+                                "annotations": []
+                            },
+                            {
+                                "name": "teacherOneId",
+                                "type": "Edm.Int32",
+                                "nullable": true,
+                                "annotations": []
+                            }
+                        ],
+                        "navigationProperties": [
+                            {
+                                "name": "teacher",
+                                "type": "Default.Teacher",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            },
+                            {
+                                "name": "students",
+                                "type": "Collection(Default.RelStudentClassAssignment)",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            }
+                        ],
+                        "annotations": []
+                    },
+                    {
+                        "name": "Profile",
+                        "key": {
+                            "propertyRefs": [
+                                {
+                                    "name": "id"
+                                }
+                            ]
+                        },
+                        "openType": false,
+                        "hasStream": false,
+                        "properties": [
+                            {
+                                "name": "id",
+                                "type": "Edm.Int32",
+                                "nullable": false,
+                                "annotations": []
+                            }
+                        ],
+                        "navigationProperties": [],
+                        "annotations": []
+                    },
+                    {
+                        "name": "RelStudentClassAssignment",
+                        "key": {
+                            "propertyRefs": [
+                                {
+                                    "name": "uuid"
+                                }
+                            ]
+                        },
+                        "openType": false,
+                        "hasStream": false,
+                        "properties": [
+                            {
+                                "name": "uuid",
+                                "type": "Edm.String",
+                                "nullable": false,
+                                "annotations": []
+                            },
+                            {
+                                "name": "studentId",
+                                "type": "Edm.Int32",
+                                "annotations": []
+                            },
+                            {
+                                "name": "classId",
+                                "type": "Edm.Int32",
+                                "annotations": []
+                            }
+                        ],
+                        "navigationProperties": [
+                            {
+                                "name": "student",
+                                "type": "Default.Student",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            },
+                            {
+                                "name": "clazz",
+                                "type": "Default.Class",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            }
+                        ],
+                        "annotations": []
+                    },
+                    {
+                        "name": "Student",
+                        "key": {
+                            "propertyRefs": [
+                                {
+                                    "name": "id"
+                                }
+                            ]
+                        },
+                        "openType": false,
+                        "hasStream": false,
+                        "properties": [
+                            {
+                                "name": "id",
+                                "type": "Edm.Int32",
+                                "nullable": false,
+                                "annotations": []
+                            },
+                            {
+                                "name": "name",
+                                "type": "Edm.String",
+                                "annotations": []
+                            },
+                            {
+                                "name": "age",
+                                "type": "Edm.Int32",
+                                "nullable": true,
+                                "annotations": []
+                            }
+                        ],
+                        "navigationProperties": [
+                            {
+                                "name": "classes",
+                                "type": "Collection(Default.RelStudentClassAssignment)",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            }
+                        ],
+                        "annotations": []
+                    },
+                    {
+                        "name": "Teacher",
+                        "key": {
+                            "propertyRefs": [
+                                {
+                                    "name": "id"
+                                }
+                            ]
+                        },
+                        "openType": false,
+                        "hasStream": false,
+                        "properties": [
+                            {
+                                "name": "id",
+                                "type": "Edm.Int32",
+                                "nullable": false,
+                                "annotations": []
+                            },
+                            {
+                                "name": "name",
+                                "type": "Edm.String",
+                                "annotations": []
+                            },
+                            {
+                                "name": "profileId",
+                                "type": "Edm.Int32",
+                                "nullable": true,
+                                "annotations": []
+                            }
+                        ],
+                        "navigationProperties": [
+                            {
+                                "name": "profile",
+                                "type": "Default.Profile",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            },
+                            {
+                                "name": "classes",
+                                "type": "Collection(Default.Class)",
+                                "referentialConstraints": [],
+                                "annotations": []
+                            }
+                        ],
+                        "annotations": []
+                    }
+                ],
+                "actions": [
+                    {
+                        "name": "addClass",
+                        "isBound": true,
+                        "parameters": [
+                            {
+                                "name": "bindingParameter",
+                                "type": "Default.Teacher",
+                                "annotations": []
+                            },
+                            {
+                                "name": "classId",
+                                "type": "Edm.Int32",
+                                "annotations": []
+                            }
+                        ],
+                        "returnType": {
+                            "annotations": []
+                        },
+                        "annotations": []
+                    }
+                ],
+                "functions": [
+                    {
+                        "name": "queryClass",
+                        "isBound": true,
+                        "parameters": [
+                            {
+                                "name": "bindingParameter",
+                                "type": "Default.Teacher",
+                                "annotations": []
+                            }
+                        ],
+                        "returnType": {
+                            "type": "Collection(Edm.String)",
+                            "annotations": []
+                        },
+                        "annotations": []
+                    }
+                ],
+                "entityContainer": [
+                    {
+                        "name": "Default",
+                        "entitySets": [
+                            {
+                                "name": "Students",
+                                "entityType": "Default.Student",
+                                "annotations": []
+                            },
+                            {
+                                "name": "Classes",
+                                "entityType": "Default.Class",
+                                "annotations": []
+                            },
+                            {
+                                "name": "Teachers",
+                                "entityType": "Default.Teacher",
+                                "annotations": []
+                            },
+                            {
+                                "name": "Profiles",
+                                "entityType": "Default.Profile",
+                                "annotations": []
+                            },
+                            {
+                                "name": "RelStudentClassAssignments",
+                                "entityType": "Default.RelStudentClassAssignment",
+                                "annotations": []
+                            }
+                        ],
+                        "actionImports": [],
+                        "functionImports": []
+                    }
+                ],
+                "annotations": []
+            }
+        ]
+    },
+    "references": [],
+    "version": "4.0"
+}
