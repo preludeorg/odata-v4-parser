@@ -52,5 +52,13 @@ describe('ResourcePath Test Suite', () => {
 
   });
 
+  it('should support $batch', () => {
+
+    // function call is similar to collection resource
+
+    parser.resourcePath('/$batch');
+
+  });
+
 
 });
