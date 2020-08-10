@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.42](https://github.com/Soontao/odata-v4-parser/compare/v0.1.41...v0.1.42) (2020-08-10)
+
+
+### Features
+
+* test for $batch ([517bb6e](https://github.com/Soontao/odata-v4-parser/commit/517bb6ebab4d5bdaba825c6c1d685643a6a00183))
+
 ### [0.1.41](https://github.com/Soontao/odata-v4-parser/compare/v0.1.40...v0.1.41) (2020-08-09)
 
 
