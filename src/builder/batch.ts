@@ -19,3 +19,13 @@ export interface JsonBatchRequest<T = any> {
     body?: T;
 }
 
+export interface JsonBatchResponseBundle {
+    responses: JsonBatchRequest[]
+}
+
+export interface JsonBatchResponse<T = any> {
+    id: string;
+    status: number;
+    body?: any;
+    headers?: JsonBatchHeaders;
+}
