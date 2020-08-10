@@ -1,7 +1,7 @@
 // https://docs.oasis-open.org/odata/odata-json-format/v4.01/odata-json-format-v4.01.html#_Toc38457781
 // support json format for batch request
 
-export interface JsonBatchBundle {
+export interface JsonBatchRequestBundle {
     requests: JsonBatchRequest[];
 }
 
@@ -20,7 +20,7 @@ export interface JsonBatchRequest<T = any> {
 }
 
 export interface JsonBatchResponseBundle {
-    responses: JsonBatchRequest[]
+    responses: JsonBatchResponse[]
 }
 
 export interface JsonBatchResponse<T = any> {
