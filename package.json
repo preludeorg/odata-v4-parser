@@ -26,7 +26,7 @@
   "scripts": {
     "prebuild": "npm run lint",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts --fix",
+    "lint": "eslint src/** --fix",
     "coverage": "npm test -- --coverage --no-cache",
     "typedoc": "typedoc --name \"OData v4 Filter Parser\" --excludeExternals --excludeNotExported --hideGenerator --excludeExternals --excludePrivate --out docs src",
     "test": "jest",

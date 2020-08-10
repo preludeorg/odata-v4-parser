@@ -1,7 +1,7 @@
-import { SourceArray } from './utils';
 import * as Lexer from './lexer';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';
+import { SourceArray } from './utils';
 
 export function odataUri(value: SourceArray, index: number, metadataContext?: any): Lexer.Token {
   let resource = ResourcePath.resourcePath(value, index, metadataContext);

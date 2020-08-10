@@ -1,7 +1,7 @@
-import { TokenType, Token } from './lexer';
-import { isPlainObject } from '@newdash/newdash/isPlainObject';
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
+import { isPlainObject } from '@newdash/newdash/isPlainObject';
+import { Token, TokenType } from './lexer';
 
 /**
  * AST Traverser

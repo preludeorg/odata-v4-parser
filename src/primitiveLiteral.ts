@@ -1,6 +1,6 @@
-import Utils, { SourceArray } from './utils';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
+import Utils, { SourceArray } from './utils';
 
 
 export function nullValue(value: SourceArray, index: number): Lexer.Token {

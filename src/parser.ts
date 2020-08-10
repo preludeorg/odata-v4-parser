@@ -1,10 +1,10 @@
-import * as Lexer from './lexer';
-import * as PrimitiveLiteral from './primitiveLiteral';
 import * as Expressions from './expressions';
+import * as ArrayOrObject from './json';
+import * as Lexer from './lexer';
+import * as ODataUri from './odataUri';
+import * as PrimitiveLiteral from './primitiveLiteral';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';
-import * as ODataUri from './odataUri';
-import * as ArrayOrObject from './json';
 
 export const parserFactory = function(fn) {
   return function(source, options) {

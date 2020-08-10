@@ -1,9 +1,8 @@
-import { ODataFilter } from './filter';
-
 import concat from '@newdash/newdash/concat';
-import join from '@newdash/newdash/join';
 import isArray from '@newdash/newdash/isArray';
+import join from '@newdash/newdash/join';
 import uniq from '@newdash/newdash/uniq';
+import { ODataFilter } from './filter';
 
 class SearchParams {
 

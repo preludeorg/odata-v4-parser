@@ -1,10 +1,9 @@
-import Utils, { SourceArray } from './utils';
-import * as Lexer from './lexer';
-import * as PrimitiveLiteral from './primitiveLiteral';
-
-import * as NameOrIdentifier from './nameOrIdentifier';
-
 import * as Expressions from './expressions';
+import * as Lexer from './lexer';
+import * as NameOrIdentifier from './nameOrIdentifier';
+import * as PrimitiveLiteral from './primitiveLiteral';
+import Utils, { SourceArray } from './utils';
+
 
 export function complexColInUri(value: SourceArray, index: number): Lexer.Token {
   const begin = Lexer.beginArray(value, index);

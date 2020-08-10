@@ -1,6 +1,6 @@
-import Utils, { SourceArray } from './utils';
 import * as Lexer from './lexer';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import Utils, { SourceArray } from './utils';
 
 export function enumeration(value: SourceArray, index: number): Lexer.Token {
   const type = qualifiedEnumTypeName(value, index);
