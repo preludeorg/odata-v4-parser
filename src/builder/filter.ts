@@ -29,7 +29,7 @@ class ODataFieldExpr {
     this._exprMappings = mapping;
     this._fieldName = fieldName;
     this._filter = filter;
-    // initilize
+    // initialize
     if (this._getFieldExprs() == undefined) {
       this._exprMappings[this._fieldName] = [];
     }

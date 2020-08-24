@@ -45,7 +45,9 @@ export interface ODataParamOrderField {
 
 
 /**
- * OData Param Object
+ * OData Query Param
+ *
+ * OData V4 support
  */
 export class ODataQueryParam {
 
