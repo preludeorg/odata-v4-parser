@@ -178,10 +178,18 @@ class ODataFieldExpr {
 /**
  * OData filter builder
  */
-export class ODataFilter {
+export class ODataFilter<T = any> {
 
-  static New(): ODataFilter {
-    return new ODataFilter();
+  static New<E>(obj?: Partial<E>): ODataFilter {
+    return new ODataFilter<E>(obj as E);
+  }
+
+  constructor(obj?: T) {
+    if (obj != undefined && typeof obj == 'object') {
+      Object.entries(obj).forEach(([prop, value]) => {
+        this.field(prop as any).eq(value);
+      });
+    }
   }
 
   private _fieldExprMappings: FieldExprMappings = {};
@@ -199,8 +207,8 @@ export class ODataFilter {
   /**
    * @param name filed name
    */
-  field(name: string): ODataFieldExpr {
-    return new ODataFieldExpr(this, name, this.getExprMapping());
+  field(name: keyof T): ODataFieldExpr {
+    return new ODataFieldExpr(this, name as string, this.getExprMapping());
   }
 
 

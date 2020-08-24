@@ -82,10 +82,12 @@ export class ODataQueryParam {
    *
    * @param filter
    */
-  filter(filter?: string | ODataFilter) {
+  filter(filter?: any) {
     if (filter instanceof ODataFilter) {
       this.$filter = filter.build();
       return this;
+    } else if (typeof filter === 'object') {
+      this.$filter = ODataFilter.New(filter);
     } else if (typeof filter === 'string') {
       this.$filter = filter;
       return this;
