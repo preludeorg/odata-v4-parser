@@ -89,7 +89,8 @@ export class ODataQueryParam {
       this.$filter = filter.build();
       return this;
     } else if (typeof filter === 'object') {
-      this.$filter = ODataFilter.New(filter);
+      this.$filter = ODataFilter.New(filter).build();
+      return this;
     } else if (typeof filter === 'string') {
       this.$filter = filter;
       return this;

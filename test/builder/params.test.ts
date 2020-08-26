@@ -1,4 +1,4 @@
-import { ODataFilter, ODataParam, ODataQueryParam } from '../../src';
+import { ODataFilter, ODataParam, ODataQueryParam, param } from '../../src';
 
 describe('ODataParams Test', () => {
 
@@ -69,5 +69,13 @@ describe('ODataParams Test', () => {
     expect(decodeURIComponent(ODataParam.New().expand('*').toString())).toEqual('$expand=*');
   });
 
+  it('should support param.filter(obj)', () => {
+    const param = ODataParam.New().filter({ A: true, B: 1, C: 'B' });
+    expect(param.toString()).toBe("$filter=A eq true and B eq 1 and C eq 'B'");
+  });
+
+  it('should support params alias', () => {
+    expect(param().top(1).toString()).toBe('$top=1');
+  });
 
 });
