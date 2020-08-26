@@ -3,5 +3,8 @@
     "source.fixAll": true,
     "source.organizeImports": true
   },
-  "jest.autoEnable": false
+  "jest.autoEnable": false,
+  "cSpell.words": [
+    "odata"
+  ]
 }

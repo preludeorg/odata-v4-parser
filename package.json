@@ -34,16 +34,16 @@
     "release": "standard-version --no-verify && git push --follow-tags origin master"
   },
   "devDependencies": {
-    "@odata/metadata": "^0.1.12",
-    "@types/jest": "^26.0.7",
-    "@types/node": "^14.0.27",
-    "@typescript-eslint/eslint-plugin": "^3.7.1",
-    "@typescript-eslint/parser": "^3.7.1",
-    "eslint": "^7.5.0",
-    "jest": "^26.1.0",
+    "@odata/metadata": "^0.1.14",
+    "@types/jest": "^26.0.10",
+    "@types/node": "^14.6.0",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "eslint": "^7.7.0",
+    "jest": "^26.4.2",
     "rimraf": "^3.0.2",
-    "standard-version": "^8.0.2",
-    "ts-jest": "^26.1.4",
+    "standard-version": "^9.0.0",
+    "ts-jest": "^26.3.0",
     "typescript": "^3.9.7"
   },
   "dependencies": {
@@ -52,6 +52,6 @@
   "keywords": [
     "odata",
     "odata(v4)",
-    "parser"
+    "uri parser"
   ]
 }

@@ -7,12 +7,21 @@
 
 OData v4 parser based on OASIS Standard OData v4 ABNF grammar
 
-## Usage
+## Usage - URI Parser
 
-```js
-const { Parser } = require('odata-v4-parser');
-const parser = new Parser()
-parser.filter("Title eq 'Article1'");
+```ts
+import { defaultParser } from "@odata/parser";
+const ast = defaultParser.odataUri("/Categories(10)?$expand=A,C&$select=D,E")
+// process it
 ```
+
+## Usage - OData QueryParam/Filter Builder
+
+```ts
+import { param, filter } from "@odata/parser";
+param().top(1).filter(filter({ A: 1 }))
+// => $top=1&$filter=A eq 1
+```
+
 
 ## [CHANGELOG](./CHANGELOG.md)
