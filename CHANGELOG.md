@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.4](https://github.com/Soontao/odata-v4-parser/compare/v0.2.3...v0.2.4) (2021-03-24)
+
+
+### Features
+
+* support uppper case 'POLYGON' ([752c6e1](https://github.com/Soontao/odata-v4-parser/commit/752c6e1463c21b19b45dec1aacd94b3af525fcbd))
+
 ### [0.2.3](https://github.com/Soontao/odata-v4-parser/compare/v0.2.2...v0.2.3) (2020-09-23)
 
 ### [0.2.2](https://github.com/Soontao/odata-v4-parser/compare/v0.2.1...v0.2.2) (2020-09-23)
