@@ -393,7 +393,8 @@ export function pointLiteral(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, data.next, data, Lexer.TokenType.Literal);
 }
 export function polygonLiteral(value: SourceArray, index: number): Lexer.Token {
-  if (!Utils.equals(value, index, 'Polygon')) { return; }
+  if (!(Utils.equals(value, index, 'Polygon') || Utils.equals(value, index, 'POLYGON'))) { return; }
+
   const start = index;
   index += 7;
 

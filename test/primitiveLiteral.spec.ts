@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { defaultParser } from '../src';
 import * as PrimitiveLiteral from '../src/primitiveLiteral';
 import cases from './primitive-cases';
 
@@ -27,6 +28,19 @@ describe('Primitive literals from json', () => {
       });
     }
   });
+
+  it('should support geography - Polygon', () => {
+    const t = defaultParser.literal("geography'SRID=12345;Polygon((-127.89734578345 45.234534534,-127.89734578345 45.234534534,-127.89734578345 45.234534534,-127.89734578345 45.234534534))'");
+    expect(t.value).toBe('Edm.GeographyPolygon');
+    expect(t).not.toBeUndefined();
+  });
+
+  it('should support geography - POLYGON', () => {
+    const t = defaultParser.literal("geography'SRID=12345;POLYGON((-127.89734578345 45.234534534,-127.89734578345 45.234534534,-127.89734578345 45.234534534,-127.89734578345 45.234534534))'");
+    expect(t.value).toBe('Edm.GeographyPolygon');
+    expect(t).not.toBeUndefined();
+  });
+
 });
 
 function getLiteralFunctionName(itemRule) {

@@ -1,6 +1,6 @@
 module.exports = {
   'transform': {
-    '.(js|ts|tsx)': 'ts-jest'
+    '.(ts|tsx)': 'ts-jest'
   },
   'testTimeout': 30 * 1000,
   'collectCoverageFrom': [
@@ -16,5 +16,6 @@ module.exports = {
   ],
   'modulePathIgnorePatterns': [
     '<rootDir>/lib'
-  ]
+  ],
+  "testEnvironment": "node"
 };
