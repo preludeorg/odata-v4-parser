@@ -6,3 +6,6 @@ test
 .vscode
 .github
 jest.config.js
+*.abnf
+src
+*.tgz
