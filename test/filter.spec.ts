@@ -1,5 +1,6 @@
-import { Parser } from '../src/parser';
-import { defaultParser, ODataFilter, ODataDateTimeV4, ODataDateTimeOffsetV4 } from '../src';
+import { get } from '@newdash/newdash';
+import { Edm } from "@odata/metadata";
+import { defaultParser, ODataDateTimeOffsetV4, ODataDateTimeV4, ODataFilter } from '../src';
 
 
 describe('Filter Test Suite', () => {
@@ -10,6 +11,13 @@ describe('Filter Test Suite', () => {
 
   it('should support complex query', () => {
     defaultParser.query('$format=json&$filter=(A eq 2) and (B eq 3 or B eq 4)');
+  });
+
+  it('should support eq with guid & string', () => {
+    const ast = defaultParser.query("$filter=A eq 702dac82-923d-4958-805b-ca41c593d74f and B eq 'strValue'")
+    expect(ast).not.toBeNull()
+    expect(get(ast, "value.options[0].value.value.left.value.right.value")).toBe(Edm.Guid.className)
+    expect(get(ast,"value.options[0].value.value.right.value.right.value")).toBe(Edm.String.className)
   });
 
   it('should support complex filter', () => {
