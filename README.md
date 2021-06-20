@@ -23,5 +23,19 @@ param().top(1).filter(filter({ A: 1 }))
 // => $top=1&$filter=A eq 1
 ```
 
+### filter with type
+
+```ts
+import { filter, Edm } from "@odata/parser";
+
+expect(filter({ A: 1 }).build())
+    .toBe("A eq 1")
+expect(filter({ A: literalValues.String(1) }).build())
+    .toBe("A eq '1'")
+expect(filter({ A: literalValues.Guid("253f842d-d739-41b8-ac8c-139ac7a9dd14") }).build())
+    .toBe("A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14")
+
+```
+
 
 ## [CHANGELOG](./CHANGELOG.md)
