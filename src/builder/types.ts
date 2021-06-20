@@ -1,57 +1,76 @@
+import { Edm } from "@odata/metadata";
 
-export abstract class ODataDataObject {
-  abstract toString(): string;
-}
-
-export class ODataDateTimeV4 extends ODataDataObject {
-
-  private constructor(date: Date) {
-    super();
-    this._date = date;
+/**
+ * 
+ * @param value primitive literal value
+ * @returns the string representation
+ */
+export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
+  if (value?.getValue?.() === null) {
+    return 'null'
   }
 
-  static from(date: Date): ODataDateTimeV4;
-  static from(date: string): ODataDateTimeV4;
-  static from(date: any): ODataDateTimeV4 {
-    switch (typeof date) {
-      case 'string':
-        return new ODataDateTimeV4(new Date(date));
+  if (value?.getValue?.() !== undefined) {
+
+    switch (value?.getType?.()) {
+      case Edm.Int16:
+      case Edm.Int32:
+      case Edm.Int64:
+      case Edm.Guid:
+      case Edm.Double:
+      case Edm.Decimal:
+      case Edm.Byte:
+      case Edm.SByte:
+      case Edm.Single:
+        return String(value.getValue())
+      case Edm.Boolean:
+        return String(value.getValue())
+      case Edm.Binary:
+        let vB = value.getValue()
+        if (vB instanceof Buffer) {
+          return `binary'${vB.toString("base64")}'`
+        }
+        return String(vB)
+      case Edm.String:
+        return `'${value.getValue()}'`
+      case Edm.Duration:
+        // TODO integrate with some other duration lib
+        return value.getValue();
+      case Edm.DateTimeOffset:
+        let v1 = value.getValue()
+        if (typeof v1 === 'string') {
+          v1 = new Date(v1)
+        }
+        return v1.toISOString()
+      case Edm.Date:
+        const v2 = value.getValue()
+        if (v2 instanceof Date) {
+          return `${v2.getFullYear()}-${v2.getMonth() + 1}-${v2.getDate()}`
+        }
+        return v2
+      case Edm.Geography:
+      case Edm.GeographyPoint:
+      case Edm.GeographyLineString:
+      case Edm.GeographyPolygon:
+      case Edm.GeographyMultiPoint:
+      case Edm.GeographyMultiLineString:
+      case Edm.GeographyMultiPolygon:
+      case Edm.GeographyCollection:
+      case Edm.Geometry:
+      case Edm.GeometryPoint:
+      case Edm.GeometryLineString:
+      case Edm.GeometryPolygon:
+      case Edm.GeometryMultiPoint:
+      case Edm.GeometryMultiLineString:
+      case Edm.GeometryMultiPolygon:
+      case Edm.GeometryCollection:
+        return String(value.getValue())
       default:
-        return new ODataDateTimeV4(date);
+        throw new TypeError(`not support type '${value.getType()}'`)
     }
   }
 
-  private _date: Date
+  throw new Error("'undefined' value provided")
 
-  public toString(): string {
-    return `${this._date.toISOString()}`;
-  }
-
-}
-
-export class ODataDateTimeOffsetV4 extends ODataDataObject {
-
-  private constructor(date: Date) {
-    super();
-    this._date = date;
-  }
-
-  static from(date: Date): ODataDateTimeOffsetV4;
-  static from(date: string): ODataDateTimeOffsetV4;
-  static from(date: any): ODataDateTimeOffsetV4 {
-    switch (typeof date) {
-      case 'string':
-        return new ODataDateTimeOffsetV4(new Date(date));
-      default:
-        return new ODataDateTimeOffsetV4(date);
-    }
-  }
-
-
-  private _date: Date
-
-  public toString(): string {
-    return `${this._date.toISOString()}`;
-  }
 
 }

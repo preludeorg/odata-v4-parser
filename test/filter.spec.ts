@@ -1,6 +1,6 @@
 import { get } from '@newdash/newdash';
 import { Edm } from "@odata/metadata";
-import { defaultParser, ODataDateTimeOffsetV4, ODataDateTimeV4, ODataFilter } from '../src';
+import { defaultParser, ODataFilter } from '../src';
 
 
 describe('Filter Test Suite', () => {
@@ -29,8 +29,8 @@ describe('Filter Test Suite', () => {
       .field('F').between(1, 3, true)
       .field('E').in(['a', 'c', 'd'])
       .field('year(Date)').eq(2010)
-      .field('Date2').gt(ODataDateTimeOffsetV4.from('2020-07-30T03:16:27.023Z'))
-      .field('Date3').lt(ODataDateTimeV4.from(new Date()))
+      .field('Date2').gt(Edm.DateTimeOffset.createValue('2020-07-30T03:16:27.023Z'))
+      .field('Date3').lt(Edm.DateTimeOffset.createValue(new Date()))
       .toString();
 
     defaultParser.filter(sFilter);

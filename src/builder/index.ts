@@ -1,6 +1,7 @@
 import { ODataFilter } from './filter';
 import { ODataParam } from './param';
 
+export { Edm } from "@odata/metadata";
 export * from './batch';
 export * from './filter';
 export * from './param';

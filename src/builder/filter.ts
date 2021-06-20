@@ -1,5 +1,6 @@
 import join from '@newdash/newdash/join';
-import { ODataDataObject } from './types';
+import { Edm } from '@odata/metadata';
+import { convertPrimitiveValueToString } from './types';
 
 export enum ExprOperator {
   eq = 'eq',
@@ -47,6 +48,10 @@ class ODataFieldExpr {
 
   private _addExpr(op: ExprOperator, value: any) {
 
+    if (value === null) {
+      this._getFieldExprs().push({ op, value: 'null' })
+    }
+
     switch (typeof value) {
       case 'number': case 'boolean':
         this._getFieldExprs().push({ op, value: `${value}` });
@@ -59,8 +64,8 @@ class ODataFieldExpr {
         }
         break;
       case 'object':
-        if (value instanceof ODataDataObject) {
-          this._getFieldExprs().push({ op, value: value.toString() });
+        if (value instanceof Edm.PrimitiveTypeValue) {
+          this._getFieldExprs().push({ op, value: convertPrimitiveValueToString(value) });
         } else {
           throw new Error(`Not support object ${value?.constructor?.name || typeof value} in odata filter eq/ne/gt/ge/ne/nt ...`);
         }
@@ -77,7 +82,7 @@ class ODataFieldExpr {
    * equal
    * @param value
    */
-  eq(value: number | string | ODataDataObject): ODataFilter {
+  eq(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.eq, value);
     return this._filter;
   }
@@ -86,7 +91,7 @@ class ODataFieldExpr {
    * not equal
    * @param value
    */
-  ne(value: number | string | ODataDataObject): ODataFilter {
+  ne(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.ne, value);
     return this._filter;
   }
@@ -105,7 +110,7 @@ class ODataFieldExpr {
    * greater or equal
    * @param value
    */
-  ge(value: number | string | ODataDataObject): ODataFilter {
+  ge(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.ge, value);
     return this._filter;
   }
@@ -114,7 +119,7 @@ class ODataFieldExpr {
    * greater than
    * @param value
    */
-  gt(value: number | string | ODataDataObject): ODataFilter {
+  gt(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.gt, value);
     return this._filter;
   }
@@ -123,7 +128,7 @@ class ODataFieldExpr {
    * less or equal
    * @param value
    */
-  le(value: number | string | ODataDataObject): ODataFilter {
+  le(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.le, value);
     return this._filter;
   }
@@ -132,7 +137,7 @@ class ODataFieldExpr {
    * less than
    * @param value
    */
-  lt(value: number | string | ODataDataObject): ODataFilter {
+  lt(value: number | string | Edm.PrimitiveTypeValue): ODataFilter {
     this._addExpr(ExprOperator.lt, value);
     return this._filter;
   }
@@ -142,7 +147,7 @@ class ODataFieldExpr {
    *
    * @param values
    */
-  in(values: Array<number | string | ODataDataObject> = []): ODataFilter {
+  in(values: Array<number | string | Edm.PrimitiveTypeValue> = []): ODataFilter {
     if (values.length > 0) {
       values.forEach((value) => {
         this.eq(value);
