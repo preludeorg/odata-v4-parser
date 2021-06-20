@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.6](https://github.com/Soontao/odata-v4-parser/compare/v0.2.5...v0.2.6) (2021-06-20)
+
+
+### Features
+
+* support filter with type ([81d6cc7](https://github.com/Soontao/odata-v4-parser/commit/81d6cc72c297c2be561da662e66c9381a9c62f8e))
+
+
+### Bug Fixes
+
+* primitive value issue ([97b432c](https://github.com/Soontao/odata-v4-parser/commit/97b432cb77be305ef822161951d9f1f46fdfc1cc))
+* type issue ([b3fb06c](https://github.com/Soontao/odata-v4-parser/commit/b3fb06cf59928f0a3c51ee7aeb1de5ddd68487d4))
+
 ### [0.2.5](https://github.com/Soontao/odata-v4-parser/compare/v0.2.4...v0.2.5) (2021-04-19)
 
 
