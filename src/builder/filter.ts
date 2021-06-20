@@ -49,7 +49,7 @@ class ODataFieldExpr {
   private _addExpr(op: ExprOperator, value: any) {
 
     if (value === null) {
-      this._getFieldExprs().push({ op, value: 'null' })
+      this._getFieldExprs().push({ op, value: 'null' });
     }
 
     switch (typeof value) {

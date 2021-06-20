@@ -1,13 +1,13 @@
-import { Edm } from "@odata/metadata";
+import { Edm } from '@odata/metadata';
 
 /**
- * 
+ *
  * @param value primitive literal value
  * @returns the string representation
  */
 export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
   if (value?.getValue?.() === null) {
-    return 'null'
+    return 'null';
   }
 
   if (value?.getValue?.() !== undefined) {
@@ -22,32 +22,32 @@ export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
       case Edm.Byte:
       case Edm.SByte:
       case Edm.Single:
-        return String(value.getValue())
+        return String(value.getValue());
       case Edm.Boolean:
-        return String(value.getValue())
+        return String(value.getValue());
       case Edm.Binary:
-        let vB = value.getValue()
+        const vB = value.getValue();
         if (vB instanceof Buffer) {
-          return `binary'${vB.toString("base64")}'`
+          return `binary'${vB.toString('base64')}'`;
         }
-        return String(vB)
+        return String(vB);
       case Edm.String:
-        return `'${value.getValue()}'`
+        return `'${value.getValue()}'`;
       case Edm.Duration:
         // TODO integrate with some other duration lib
         return value.getValue();
       case Edm.DateTimeOffset:
-        let v1 = value.getValue()
+        let v1 = value.getValue();
         if (typeof v1 === 'string') {
-          v1 = new Date(v1)
+          v1 = new Date(v1);
         }
-        return v1.toISOString()
+        return v1.toISOString();
       case Edm.Date:
-        const v2 = value.getValue()
+        const v2 = value.getValue();
         if (v2 instanceof Date) {
-          return `${v2.getFullYear()}-${v2.getMonth() + 1}-${v2.getDate()}`
+          return `${v2.getFullYear()}-${v2.getMonth() + 1}-${v2.getDate()}`;
         }
-        return v2
+        return v2;
       case Edm.Geography:
       case Edm.GeographyPoint:
       case Edm.GeographyLineString:
@@ -64,13 +64,13 @@ export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
       case Edm.GeometryMultiLineString:
       case Edm.GeometryMultiPolygon:
       case Edm.GeometryCollection:
-        return String(value.getValue())
+        return String(value.getValue());
       default:
-        throw new TypeError(`not support type '${value.getType()}'`)
+        throw new TypeError(`not support type '${value.getType()}'`);
     }
   }
 
-  throw new Error("'undefined' value provided")
+  throw new Error("'undefined' value provided");
 
 
 }
