@@ -39,3 +39,5 @@ expect(filter({ A: literalValues.Guid("253f842d-d739-41b8-ac8c-139ac7a9dd14") })
 
 
 ## [CHANGELOG](./CHANGELOG.md)
+
+## [LICENSE](./LICENSE)
