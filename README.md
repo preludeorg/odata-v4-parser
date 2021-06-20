@@ -26,7 +26,7 @@ param().top(1).filter(filter({ A: 1 }))
 ### filter with type
 
 ```ts
-import { filter, Edm } from "@odata/parser";
+import { filter, literalValues } from "@odata/parser";
 
 expect(filter({ A: 1 }).build())
     .toBe("A eq 1")
