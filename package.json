@@ -34,19 +34,19 @@
     "release": "standard-version --no-verify && git push --follow-tags origin master"
   },
   "devDependencies": {
-    "@odata/metadata": "^0.2.5",
     "@types/jest": "^26.0.23",
     "@types/node": "^14.14.41",
-    "@typescript-eslint/eslint-plugin": "^4.27.0",
-    "@typescript-eslint/parser": "^4.27.0",
+    "@typescript-eslint/eslint-plugin": "^4.28.0",
+    "@typescript-eslint/parser": "^4.28.0",
     "eslint": "^7.29.0",
-    "jest": "^27.0.4",
+    "jest": "^27.0.5",
     "rimraf": "^3.0.2",
     "standard-version": "^9.3.0",
     "ts-jest": "^27.0.3",
     "typescript": "^4.3.4"
   },
   "dependencies": {
+    "@odata/metadata": "^0.2.5",
     "@newdash/newdash": "^5.19.0"
   },
   "keywords": [
