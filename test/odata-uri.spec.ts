@@ -16,4 +16,13 @@ describe('OData URI Test Suite', () => {
 
   });
 
+  it('should support empty query', () => {
+    const ast = defaultParser.odataUri('/Categories?');
+    expect(ast).not.toBeUndefined()
+    expect(ast?.value?.query).not.toBeUndefined()
+    expect(ast.value?.query?.value?.options).toBeNull()
+    expect(ast.value?.resource?.raw).toBe("Categories")
+
+  });
+
 });
