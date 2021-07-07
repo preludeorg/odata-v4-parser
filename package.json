@@ -31,7 +31,7 @@
     "typedoc": "typedoc --name \"OData v4 Filter Parser\" --excludeExternals --excludeNotExported --hideGenerator --excludeExternals --excludePrivate --out docs src",
     "test": "jest",
     "prepublishOnly": "npm run test && npm run build",
-    "release": "standard-version --no-verify && git push --follow-tags origin master"
+    "release": "standard-version --no-verify && git push --follow-tags origin main"
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",
