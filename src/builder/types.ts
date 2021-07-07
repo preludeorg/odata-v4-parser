@@ -1,11 +1,16 @@
 import { Edm } from '@odata/metadata';
 
+export type ODataVersion = 'v2' | 'v4';
+
 /**
  *
  * @param value primitive literal value
  * @returns the string representation
  */
-export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
+export function convertPrimitiveValueToString(
+  value: Edm.PrimitiveTypeValue,
+  version: ODataVersion = 'v4'
+) {
   if (value?.getValue?.() === null) {
     return 'null';
   }
@@ -35,10 +40,22 @@ export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
       case Edm.Duration:
         // TODO integrate with some other duration lib
         return value.getValue();
+      case Edm.DateTime:
+        let vd = value.getValue();
+        if (typeof vd === 'string') {
+          vd = new Date(vd);
+        }
+        if (version === 'v2') {
+          return `datetime'${vd.toISOString()}'`;
+        }
+        throw new Error("OData V4 is not support 'Edm.DateTime' values");
       case Edm.DateTimeOffset:
         let v1 = value.getValue();
         if (typeof v1 === 'string') {
           v1 = new Date(v1);
+        }
+        if (version === 'v2') {
+          return `datetimeoffset'${v1.toISOString()}'`;
         }
         return v1.toISOString();
       case Edm.Date:

@@ -5,7 +5,7 @@ describe('OData Query Builder - Filter Test Suite', () => {
   it('should support filter by value/name', () => {
 
     expect(ODataFilter.New().field('A').eq('a').toString()).toBe("A eq 'a'");
-    expect(ODataFilter.New().field('A').eq(literalValues.String("a")).toString()).toBe("A eq 'a'");
+    expect(ODataFilter.New().field('A').eq(literalValues.String('a')).toString()).toBe("A eq 'a'");
     expect(ODataFilter.New().field('A').eq(1).toString()).toBe('A eq 1');
 
   });
@@ -30,21 +30,21 @@ describe('OData Query Builder - Filter Test Suite', () => {
   it('should support filter guid', () => {
     expect(
       filter()
-        .field("A")
-        .eq(literalValues.Guid("253f842d-d739-41b8-ac8c-139ac7a9dd14"))
+        .field('A')
+        .eq(literalValues.Guid('253f842d-d739-41b8-ac8c-139ac7a9dd14'))
         .build()
-    ).toBe("A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14")
+    ).toBe('A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14');
 
     expect(
-      filter({ A: literalValues.Guid("253f842d-d739-41b8-ac8c-139ac7a9dd14") })
+      filter({ A: literalValues.Guid('253f842d-d739-41b8-ac8c-139ac7a9dd14') })
         .build()
-    ).toBe("A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14")
+    ).toBe('A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14');
   });
 
   it('should support filter with type', () => {
-    expect(filter({ A: 1 }).build()).toBe("A eq 1")
-    expect(filter({ A: literalValues.String('1') }).build()).toBe("A eq '1'")
-    expect(filter({ A: literalValues.Guid("253f842d-d739-41b8-ac8c-139ac7a9dd14") }).build()).toBe("A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14")
+    expect(filter({ A: 1 }).build()).toBe('A eq 1');
+    expect(filter({ A: literalValues.String('1') }).build()).toBe("A eq '1'");
+    expect(filter({ A: literalValues.Guid('253f842d-d739-41b8-ac8c-139ac7a9dd14') }).build()).toBe('A eq 253f842d-d739-41b8-ac8c-139ac7a9dd14');
   });
 
 });

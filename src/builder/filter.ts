@@ -1,6 +1,6 @@
 import join from '@newdash/newdash/join';
 import { Edm } from '@odata/metadata';
-import { convertPrimitiveValueToString } from './types';
+import { convertPrimitiveValueToString, ODataVersion } from './types';
 
 export enum ExprOperator {
   eq = 'eq',
@@ -8,12 +8,12 @@ export enum ExprOperator {
   gt = 'gt',
   lt = 'lt',
   ge = 'ge',
-  le = 'le',
+  le = 'le'
 }
 
 type FieldExpr = {
   op: ExprOperator;
-  value: string;
+  value: any;
 };
 
 type FieldExprMappings = {
@@ -52,33 +52,15 @@ class ODataFieldExpr {
   private _addExpr(op: ExprOperator, value: any) {
     if (value === null) {
       this._getFieldExprs().push({ op, value: 'null' });
+      return;
     }
 
     switch (typeof value) {
       case 'number':
       case 'boolean':
-        this._getFieldExprs().push({ op, value: `${value}` });
-        break;
       case 'string':
-        if (value.startsWith("'") || value.startsWith('datetime')) {
-          this._getFieldExprs().push({ op, value });
-        } else {
-          this._getFieldExprs().push({ op, value: `'${value}'` });
-        }
-        break;
       case 'object':
-        if (value instanceof Edm.PrimitiveTypeValue) {
-          this._getFieldExprs().push({
-            op,
-            value: convertPrimitiveValueToString(value)
-          });
-        } else {
-          throw new Error(
-            `Not support object ${
-              value?.constructor?.name || typeof value
-            } in odata filter eq/ne/gt/ge/ne/nt ...`
-          );
-        }
+        this._getFieldExprs().push({ op, value });
         break;
       case 'undefined':
         throw new Error(
@@ -228,28 +210,72 @@ export class ODataFilter<T = any> {
     return new ODataFieldExpr(this, name as string, this.getExprMapping());
   }
 
-  toString(): string {
-    return this.build();
+  public toString(version: ODataVersion = 'v4'): string {
+    return this.build(version);
   }
 
-  protected _buildFieldExprString(field: string): string {
+  private _buildExprLit(value: any, version: ODataVersion = 'v4') {
+    if (value === null) {
+      return 'null';
+    }
+
+    switch (typeof value) {
+      case 'number':
+      case 'boolean':
+        return `${value}`;
+      case 'string':
+        if (value.startsWith("'") || value.startsWith('datetime')) {
+          return value;
+        }
+        return `'${value}'`;
+      case 'object':
+        if (value instanceof Edm.PrimitiveTypeValue) {
+          return convertPrimitiveValueToString(value, version);
+        }
+        throw new Error(
+          `Not support object ${
+            value?.constructor?.name || typeof value
+          } in odata filter eq/ne/gt/ge/ne/nt ...`
+        );
+
+      case 'undefined':
+        throw new Error(
+          `You must set value in odata filter eq/ne/gt/ge/ne/nt ...`
+        );
+      default:
+        throw new Error(
+          `Not support typeof ${typeof value}: ${value} in odata filter eq/ne/gt/ge/ne/nt ...`
+        );
+    }
+  }
+
+  protected _buildFieldExprString(
+    field: string,
+    version: ODataVersion = 'v4'
+  ): string {
     const exprs = this.getExprMapping()[field];
     if (exprs.length > 0) {
       if (exprs.filter((expr) => expr.op == ExprOperator.eq).length == 0) {
         return `(${join(
-          exprs.map(({ op, value }) => `${field} ${op} ${value}`),
+          exprs.map(
+            ({ op, value }) =>
+              `${field} ${op} ${this._buildExprLit(value, version)}`
+          ),
           ' and '
         )})`;
       }
       return `(${join(
-        exprs.map(({ op, value }) => `${field} ${op} ${value}`),
+        exprs.map(
+          ({ op, value }) =>
+            `${field} ${op} ${this._buildExprLit(value, version)}`
+        ),
         ' or '
       )})`;
     }
     return '';
   }
 
-  build(): string {
+  public build(version: ODataVersion = 'v4'): string {
     let _rt = '';
     _rt = join(
       // join all fields exprs string
@@ -261,10 +287,10 @@ export class ODataFilter<T = any> {
           // only have one expr
           case 1:
             const { op, value } = exprs[0];
-            return `${fieldName} ${op} ${value}`;
+            return `${fieldName} ${op} ${this._buildExprLit(value, version)}`;
           default:
             // multi exprs
-            return this._buildFieldExprString(fieldName);
+            return this._buildFieldExprString(fieldName, version);
         }
       }),
       ' and '

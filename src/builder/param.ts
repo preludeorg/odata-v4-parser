@@ -3,6 +3,7 @@ import isArray from '@newdash/newdash/isArray';
 import join from '@newdash/newdash/join';
 import uniq from '@newdash/newdash/uniq';
 import { ODataFilter } from './filter';
+import { ODataVersion } from './types';
 
 class SearchParams {
   _store = new Map();
@@ -197,7 +198,7 @@ export class ODataQueryParam {
     return this;
   }
 
-  toString(): string {
+  toString(version: ODataVersion = 'v4'): string {
     const rt = new SearchParams();
     if (this.$format) {
       rt.append('$format', this.$format);
@@ -223,8 +224,19 @@ export class ODataQueryParam {
     if (this.$expand && this.$expand.length > 0) {
       rt.append('$expand', this.$expand.join(','));
     }
-    if (this.$count) {
-      rt.append('$count', 'true');
+    switch (version) {
+      case 'v2':
+        if (this.$count) {
+          rt.append('$inlinecount', 'allpages');
+        }
+        break;
+      case 'v4':
+        if (this.$count) {
+          rt.append('$count', 'true');
+        }
+        break;
+      default:
+        break;
     }
     return rt.toString();
   }

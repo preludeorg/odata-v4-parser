@@ -6,6 +6,10 @@
   "jest.autoEnable": false,
   "cSpell.words": [
     "Theo",
+    "allpages",
+    "datetime",
+    "datetimeoffset",
+    "inlinecount",
     "odata"
   ]
 }

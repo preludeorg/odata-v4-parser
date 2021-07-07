@@ -78,4 +78,9 @@ describe('ODataParams Test', () => {
     expect(param().top(1).toString()).toBe('$top=1');
   });
 
+  it('should support params with count', () => {
+    expect(param().count(true).toString('v2')).toBe('$inlinecount=allpages');
+    expect(param().count(true).toString('v4')).toBe('$count=true');
+  });
+
 });
