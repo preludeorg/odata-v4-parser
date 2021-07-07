@@ -24,6 +24,13 @@ describe('Parser', () => {
     expect(ast.value.options[0].value.items[1].raw).toEqual('bar');
   });
 
+  it('should parse multiple orderby params with optional space', () => {
+    const parser = new Parser();
+    const ast = parser.query('$orderby=foo, bar');
+    expect(ast.value.options[0].value.items[0].raw).toEqual('foo');
+    expect(ast.value.options[0].value.items[1].raw).toEqual('bar');
+  });
+
   it('should parse custom query options', () => {
     const parser = new Parser();
     const ast = parser.query('foo=123&bar=foobar');

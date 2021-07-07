@@ -51,5 +51,5 @@ export const literalValues = {
   GeometryMultiPoint: (value: any) => Edm.GeometryMultiPoint.createValue(value),
   GeometryMultiLineString: (value: any) => Edm.GeometryMultiLineString.createValue(value),
   GeometryMultiPolygon: (value: any) => Edm.GeometryMultiPolygon.createValue(value),
-  GeometryCollection: (value: any) => Edm.GeometryCollection.createValue(value),
-}
+  GeometryCollection: (value: any) => Edm.GeometryCollection.createValue(value)
+};

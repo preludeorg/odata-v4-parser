@@ -55,6 +55,8 @@ describe('Query Test Suite', () => {
   it('should parse $orderby', () => {
     parser.query('$orderby=A desc');
     parser.query('$orderby=A desc,B asc');
+    parser.query('$orderby=A desc, B asc');
+
   });
 
   it('should parse $format', () => {
