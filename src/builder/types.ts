@@ -11,7 +11,6 @@ export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
   }
 
   if (value?.getValue?.() !== undefined) {
-
     switch (value?.getType?.()) {
       case Edm.Int16:
       case Edm.Int32:
@@ -71,6 +70,4 @@ export function convertPrimitiveValueToString(value: Edm.PrimitiveTypeValue) {
   }
 
   throw new Error("'undefined' value provided");
-
-
 }

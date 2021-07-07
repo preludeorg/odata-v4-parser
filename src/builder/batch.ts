@@ -4,30 +4,30 @@
 import { ODataMethod } from '../constants';
 
 export interface JsonBatchRequestBundle {
-    requests: JsonBatchRequest[];
+  requests: JsonBatchRequest[];
 }
 
-export type JsonBatchMethod = ODataMethod
+export type JsonBatchMethod = ODataMethod;
 
-export type JsonBatchHeaders = Record<string, string>
+export type JsonBatchHeaders = Record<string, string>;
 
 export interface JsonBatchRequest<T = any> {
-    id: string;
-    method: JsonBatchMethod;
-    url: string;
-    atomicityGroup?: string;
-    dependsOn?: string[];
-    headers?: JsonBatchHeaders;
-    body?: T;
+  id: string;
+  method: JsonBatchMethod;
+  url: string;
+  atomicityGroup?: string;
+  dependsOn?: string[];
+  headers?: JsonBatchHeaders;
+  body?: T;
 }
 
 export interface JsonBatchResponseBundle {
-    responses: JsonBatchResponse[]
+  responses: JsonBatchResponse[];
 }
 
 export interface JsonBatchResponse<T = any> {
-    id: string;
-    status: number;
-    body?: any;
-    headers?: JsonBatchHeaders;
+  id: string;
+  status: number;
+  body?: any;
+  headers?: JsonBatchHeaders;
 }

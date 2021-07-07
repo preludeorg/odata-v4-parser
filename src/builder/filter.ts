@@ -14,19 +14,22 @@ export enum ExprOperator {
 type FieldExpr = {
   op: ExprOperator;
   value: string;
-}
+};
 
 type FieldExprMappings = {
-  [key: string]: FieldExpr[]
-}
+  [key: string]: FieldExpr[];
+};
 
 /**
  * @private
  * @internal
  */
 class ODataFieldExpr {
-
-  constructor(filter: ODataFilter, fieldName: string, mapping: FieldExprMappings) {
+  constructor(
+    filter: ODataFilter,
+    fieldName: string,
+    mapping: FieldExprMappings
+  ) {
     this._exprMappings = mapping;
     this._fieldName = fieldName;
     this._filter = filter;
@@ -40,20 +43,20 @@ class ODataFieldExpr {
 
   private _fieldName: string;
 
-  private _exprMappings: FieldExprMappings
+  private _exprMappings: FieldExprMappings;
 
   private _getFieldExprs() {
     return this._exprMappings[this._fieldName];
   }
 
   private _addExpr(op: ExprOperator, value: any) {
-
     if (value === null) {
       this._getFieldExprs().push({ op, value: 'null' });
     }
 
     switch (typeof value) {
-      case 'number': case 'boolean':
+      case 'number':
+      case 'boolean':
         this._getFieldExprs().push({ op, value: `${value}` });
         break;
       case 'string':
@@ -65,17 +68,27 @@ class ODataFieldExpr {
         break;
       case 'object':
         if (value instanceof Edm.PrimitiveTypeValue) {
-          this._getFieldExprs().push({ op, value: convertPrimitiveValueToString(value) });
+          this._getFieldExprs().push({
+            op,
+            value: convertPrimitiveValueToString(value)
+          });
         } else {
-          throw new Error(`Not support object ${value?.constructor?.name || typeof value} in odata filter eq/ne/gt/ge/ne/nt ...`);
+          throw new Error(
+            `Not support object ${
+              value?.constructor?.name || typeof value
+            } in odata filter eq/ne/gt/ge/ne/nt ...`
+          );
         }
         break;
       case 'undefined':
-        throw new Error(`You must set value in odata filter eq/ne/gt/ge/ne/nt ...`);
+        throw new Error(
+          `You must set value in odata filter eq/ne/gt/ge/ne/nt ...`
+        );
       default:
-        throw new Error(`Not support typeof ${typeof value}: ${value} in odata filter eq/ne/gt/ge/ne/nt ...`);
+        throw new Error(
+          `Not support typeof ${typeof value}: ${value} in odata filter eq/ne/gt/ge/ne/nt ...`
+        );
     }
-
   }
 
   /**
@@ -147,7 +160,9 @@ class ODataFieldExpr {
    *
    * @param values
    */
-  in(values: Array<number | string | Edm.PrimitiveTypeValue> = []): ODataFilter {
+  in(
+    values: Array<number | string | Edm.PrimitiveTypeValue> = []
+  ): ODataFilter {
     if (values.length > 0) {
       values.forEach((value) => {
         this.eq(value);
@@ -176,15 +191,12 @@ class ODataFieldExpr {
     }
     return this._filter;
   }
-
 }
-
 
 /**
  * OData filter builder
  */
 export class ODataFilter<T = any> {
-
   static New<E>(obj?: Partial<E>): ODataFilter {
     return new ODataFilter<E>(obj as E);
   }
@@ -216,7 +228,6 @@ export class ODataFilter<T = any> {
     return new ODataFieldExpr(this, name as string, this.getExprMapping());
   }
 
-
   toString(): string {
     return this.build();
   }
@@ -234,37 +245,30 @@ export class ODataFilter<T = any> {
         exprs.map(({ op, value }) => `${field} ${op} ${value}`),
         ' or '
       )})`;
-
     }
     return '';
-
-
   }
 
   build(): string {
     let _rt = '';
     _rt = join(
       // join all fields exprs string
-      Object.entries(this.getExprMapping()).map(
-        ([fieldName, exprs]) => {
-          switch (exprs.length) {
-            // if one field expr mapping array is empty
-            case 0:
-              return '';
-            // only have one expr
-            case 1:
-              const { op, value } = exprs[0];
-              return `${fieldName} ${op} ${value}`;
-            default:
-              // multi exprs
-              return this._buildFieldExprString(fieldName);
-          }
-
+      Object.entries(this.getExprMapping()).map(([fieldName, exprs]) => {
+        switch (exprs.length) {
+          // if one field expr mapping array is empty
+          case 0:
+            return '';
+          // only have one expr
+          case 1:
+            const { op, value } = exprs[0];
+            return `${fieldName} ${op} ${value}`;
+          default:
+            // multi exprs
+            return this._buildFieldExprString(fieldName);
         }
-      ),
+      }),
       ' and '
     );
     return _rt;
   }
-
 }

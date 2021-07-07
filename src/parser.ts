@@ -15,8 +15,12 @@ export const parserFactory = function(fn) {
       raw[i] = source.charCodeAt(i);
     }
     const result = fn(raw, pos, options.metadata);
-    if (!result) { throw new Error(`Fail at ${pos}`); }
-    if (result.next < raw.length) { throw new Error(`Unexpected character at ${result.next}`); }
+    if (!result) {
+      throw new Error(`Fail at ${pos}`);
+    }
+    if (result.next < raw.length) {
+      throw new Error(`Unexpected character at ${result.next}`);
+    }
     return result;
   };
 };

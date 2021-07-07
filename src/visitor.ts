@@ -6,14 +6,16 @@ import { Token, TokenType } from './lexer';
 /**
  * AST Traverser
  */
-export type Traverser = { [key in TokenType]?: (token: Token, parent?: Token) => void }
+export type Traverser = {
+  [key in TokenType]?: (token: Token, parent?: Token) => void;
+};
 
 /**
  * AST Visitor
  *
  * @alias Traverser
  */
-export type Visitor = Traverser
+export type Visitor = Traverser;
 
 /**
  * Traverse AST with traverser
@@ -21,8 +23,11 @@ export type Visitor = Traverser
  * @param traverser
  * @param node
  */
-export function traverseAst(traverser: Traverser, node: Token, parent?: Token): void {
-
+export function traverseAst(
+  traverser: Traverser,
+  node: Token,
+  parent?: Token
+): void {
   if (node instanceof Token) {
     if (node?.type in traverser) {
       traverser[node?.type](node, parent);
@@ -56,7 +61,6 @@ export function traverseAst(traverser: Traverser, node: Token, parent?: Token): 
   if (node?.value instanceof Token) {
     traverseAst(traverser, node?.value, node);
   }
-
 }
 
 /**
@@ -66,8 +70,11 @@ export function traverseAst(traverser: Traverser, node: Token, parent?: Token): 
  * @param node
  * @param parent
  */
-export function traverseAstDeepFirst(traverser: Traverser, node: Token, parent?: Token): void {
-
+export function traverseAstDeepFirst(
+  traverser: Traverser,
+  node: Token,
+  parent?: Token
+): void {
   if (isArray(node?.value) || isPlainObject(node?.value)) {
     forEach(node?.value, (item) => {
       if (item instanceof Token) {
@@ -101,7 +108,6 @@ export function traverseAstDeepFirst(traverser: Traverser, node: Token, parent?:
       traverser[node.type](node, parent);
     }
   }
-
 }
 
 export function createTraverser(traverser: Traverser, deepFirst = false) {

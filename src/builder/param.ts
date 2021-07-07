@@ -5,12 +5,13 @@ import uniq from '@newdash/newdash/uniq';
 import { ODataFilter } from './filter';
 
 class SearchParams {
-
-  _store = new Map()
+  _store = new Map();
 
   append(key: string, value: string): void {
     if (this._store.has(key)) {
-      throw new Error(`key ${key} has been appended before, and can not be overwritten!`);
+      throw new Error(
+        `key ${key} has been appended before, and can not be overwritten!`
+      );
     }
     this._store.set(key, value);
   }
@@ -26,11 +27,9 @@ class SearchParams {
   destroy() {
     delete this._store;
   }
-
 }
 
 export interface ODataParamOrderField {
-
   /**
    * field name
    */
@@ -40,9 +39,7 @@ export interface ODataParamOrderField {
    * order asc or desc
    */
   order?: 'asc' | 'desc';
-
 }
-
 
 /**
  * OData Query Param
@@ -50,21 +47,19 @@ export interface ODataParamOrderField {
  * OData V4 support
  */
 export class ODataQueryParam {
-
   static New(): ODataQueryParam {
     return new ODataQueryParam();
   }
 
-  private $skip = 0
-  private $filter: string | ODataFilter
-  private $top = 0
-  private $select: string[] = []
-  private $orderby: string
-  private $format: 'json' | 'xml'
-  private $search: string
-  private $expand: string[] = []
-  private $count = false
-
+  private $skip = 0;
+  private $filter: string | ODataFilter;
+  private $top = 0;
+  private $select: string[] = [];
+  private $orderby: string;
+  private $format: 'json' | 'xml';
+  private $search: string;
+  private $expand: string[] = [];
+  private $count = false;
 
   /**
    *
@@ -95,7 +90,9 @@ export class ODataQueryParam {
       this.$filter = filter;
       return this;
     }
-    throw new Error('ODataQueryParam.filter only accept string or ODataFilter type parameter');
+    throw new Error(
+      'ODataQueryParam.filter only accept string or ODataFilter type parameter'
+    );
   }
 
   /**
@@ -108,7 +105,6 @@ export class ODataQueryParam {
     return this;
   }
 
-
   /**
    * limit result max records
    *
@@ -118,7 +114,6 @@ export class ODataQueryParam {
     this.$top = top;
     return this;
   }
-
 
   /**
    * select viewed fields
@@ -145,7 +140,6 @@ export class ODataQueryParam {
     }
     this.$orderby = `${fieldOrOrders} ${order}`;
     return this;
-
   }
 
   /**
@@ -154,7 +148,10 @@ export class ODataQueryParam {
    * @param fields
    */
   orderbyMulti(fields: ODataParamOrderField[] = []) {
-    this.$orderby = join(fields.map((f) => `${f.field} ${f.order || 'desc'}`), ',');
+    this.$orderby = join(
+      fields.map((f) => `${f.field} ${f.order || 'desc'}`),
+      ','
+    );
     return this;
   }
 
@@ -200,18 +197,35 @@ export class ODataQueryParam {
     return this;
   }
 
-
   toString(): string {
     const rt = new SearchParams();
-    if (this.$format) { rt.append('$format', this.$format); }
-    if (this.$filter) { rt.append('$filter', this.$filter.toString()); }
-    if (this.$orderby) { rt.append('$orderby', this.$orderby); }
-    if (this.$search) { rt.append('$search', this.$search); }
-    if (this.$select && this.$select.length > 0) { rt.append('$select', join(uniq(this.$select), ',')); }
-    if (this.$skip) { rt.append('$skip', this.$skip.toString()); }
-    if (this.$top && this.$top > 0) { rt.append('$top', this.$top.toString()); }
-    if (this.$expand && this.$expand.length > 0) { rt.append('$expand', this.$expand.join(',')); }
-    if (this.$count) { rt.append('$count', 'true'); }
+    if (this.$format) {
+      rt.append('$format', this.$format);
+    }
+    if (this.$filter) {
+      rt.append('$filter', this.$filter.toString());
+    }
+    if (this.$orderby) {
+      rt.append('$orderby', this.$orderby);
+    }
+    if (this.$search) {
+      rt.append('$search', this.$search);
+    }
+    if (this.$select && this.$select.length > 0) {
+      rt.append('$select', join(uniq(this.$select), ','));
+    }
+    if (this.$skip) {
+      rt.append('$skip', this.$skip.toString());
+    }
+    if (this.$top && this.$top > 0) {
+      rt.append('$top', this.$top.toString());
+    }
+    if (this.$expand && this.$expand.length > 0) {
+      rt.append('$expand', this.$expand.join(','));
+    }
+    if (this.$count) {
+      rt.append('$count', 'true');
+    }
     return rt.toString();
   }
 }
