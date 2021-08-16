@@ -38,7 +38,10 @@ describe('Query Test Suite', () => {
   it('should parse $select', () => {
     expect(parser.query('$select=A').value.options[0].value.items[0].value.raw).toEqual('A');
     expect(parser.query('$select=*').value.options[0].value.items[0].value.value).toEqual('*');
-    const ast = defaultParser.query('$select=A,B,C');
+    let ast = defaultParser.query('$select=A,B,C');
+    expect(findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
+    ).toStrictEqual(['A', 'B', 'C']);
+    ast = defaultParser.query('$select=A, B,C');
     expect(findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
     ).toStrictEqual(['A', 'B', 'C']);
 

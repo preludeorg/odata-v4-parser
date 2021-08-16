@@ -1039,6 +1039,10 @@ export function select(value: SourceArray, index: number): Lexer.Token {
     const comma = Lexer.COMMA(value, index);
     if (comma) {
       index = comma;
+      const space = Lexer.OWS(value, index);
+      if (space) {
+        index = space;
+      }
       token = selectItem(value, index);
       if (!token) {
         return;
