@@ -1,9 +1,8 @@
-import { Parser } from '../src/parser';
-import { findOne, findAll } from '../src/utils';
-import { TokenType } from '../src/lexer';
 import { get } from '@newdash/newdash';
-import { defaultParser, ODataParam, ODataFilter } from '../src';
-import { execPath } from 'process';
+import { defaultParser, ODataFilter, ODataParam } from '../src';
+import { TokenType } from '../src/lexer';
+import { Parser } from '../src/parser';
+import { findAll, findOne } from '../src/utils';
 
 describe('Query Test Suite', () => {
 

@@ -1,7 +1,6 @@
-import { Parser } from '../src/parser';
-import { findAll, findOne } from '../src/utils';
 import { TokenType } from '../src/lexer';
-
+import { Parser } from '../src/parser';
+import { findOne } from '../src/utils';
 
 describe('ResourcePath Test Suite', () => {
 

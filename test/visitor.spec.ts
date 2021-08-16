@@ -1,4 +1,4 @@
-import { defaultParser, createTraverser } from '../src';
+import { createTraverser, defaultParser } from '../src';
 
 describe('Visitor Parse Suite', () => {
 
