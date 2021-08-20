@@ -160,7 +160,7 @@ export enum TokenType {
   ODataUri = 'ODataUri',
   Batch = 'Batch',
   Entity = 'Entity',
-  Metadata = 'Metadata',
+  Metadata = 'Metadata'
 }
 
 export const LexerTokenType = TokenType;
@@ -171,9 +171,19 @@ export class Token {
   next: number;
   value: any;
   type: TokenType;
+  /**
+   * raw string of token
+   */
   raw: string;
   metadata: any;
-  constructor(token) {
+  constructor(token: {
+    position: number;
+    next: number;
+    value: any;
+    type: TokenType;
+    raw: string;
+    metadata?: any;
+  }) {
     this.position = token.position;
     this.next = token.next;
     this.value = token.value;
@@ -195,7 +205,7 @@ export function tokenize(
   tokenType: TokenType,
   metadataContextContainer?: Token
 ): Token {
-  const token = new exports.Token({
+  const token = new Token({
     position: index,
     next,
     value: tokenValue,
@@ -209,8 +219,9 @@ export function tokenize(
   return token;
 }
 
+
 export function clone(token): Token {
-  return new exports.Token({
+  return new Token({
     position: token.position,
     next: token.next,
     value: token.value,

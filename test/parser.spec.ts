@@ -1,4 +1,6 @@
+import { defaultParser, TokenType } from '../src';
 import { Parser } from '../src/parser';
+import { isType } from '../src/utils';
 
 describe('Parser', () => {
 
@@ -34,20 +36,24 @@ describe('Parser', () => {
   it('should parse custom query options', () => {
     const parser = new Parser();
     const ast = parser.query('foo=123&bar=foobar');
-    expect(ast.value.options[0].value.key).toEqual('foo');
-    expect(ast.value.options[0].value.value).toEqual('123');
-    expect(ast.value.options[1].value.key).toEqual('bar');
-    expect(ast.value.options[1].value.value).toEqual('foobar');
+
+    expect(ast.value.options[0].type).toBe(TokenType.CustomQueryOption);
+    expect(ast.value.options[1].type).toBe(TokenType.CustomQueryOption);
+
+    if (isType(ast.value.options[0],TokenType.CustomQueryOption)) {
+      expect(ast.value.options[0].value.key).toEqual('foo');
+      expect(ast.value.options[0].value.value).toEqual('123');
+    }
+
+    if (isType(ast.value.options[1],TokenType.CustomQueryOption)) {
+      expect(ast.value.options[1].value.key).toEqual('bar');
+      expect(ast.value.options[1].value.value).toEqual('foobar');
+    }
+
   });
 
   it('should throw error parsing invalid custom query options', () => {
-    const parser = new Parser();
-    let error = false;
-    try {
-      const ast = parser.query('$foo=123');
-      error = true;
-    } catch (err) { }
-    expect(error).toBeFalsy();
+    expect(() => {defaultParser.query('$foo=123');}).toThrow();
   });
 
 });

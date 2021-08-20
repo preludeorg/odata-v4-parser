@@ -1,4 +1,13 @@
+import { map } from '@newdash/newdash/map';
 import { Token, TokenType } from './lexer';
+import {
+  CustomQueryOptionToken,
+  ExpandToken,
+  FormatToken,
+  SearchToken,
+  SkipToken,
+  TopToken
+} from './token';
 import { createTraverser } from './visitor';
 
 export type SourceArray = number[] | Uint16Array;
@@ -8,9 +17,9 @@ export function stringify(
   index: number,
   next: number
 ): string {
-  return Array.prototype.map
-    .call(value.slice(index, next), (ch) => String.fromCharCode(ch))
-    .join('');
+  return map(value.slice(index, next), (ch) => String.fromCharCode(ch)).join(
+    ''
+  );
 }
 
 export function is(value: number, compare: string) {
@@ -48,13 +57,29 @@ export function required(
   return i >= (min || 0) && i <= max ? index + i : 0;
 }
 
+export function isType(
+  node: Token,
+  type: TokenType.CustomQueryOption
+): node is CustomQueryOptionToken;
+export function isType(node: Token, type: TokenType.Skip): node is SkipToken;
+export function isType(node: Token, type: TokenType.Top): node is TopToken;
+export function isType(node: Token, type: TokenType): boolean {
+  return node?.type == type;
+}
+
 /**
  * find one node in ast node by type
  *
  * @param node
  * @param type
  */
-export function findOne(node: Token, type: TokenType): Token {
+export function findOne(node: Token, type: TokenType.Top): TopToken;
+export function findOne(node: Token, type: TokenType.Skip): SkipToken;
+export function findOne(node: Token, type: TokenType.Expand): ExpandToken;
+export function findOne(node: Token, type: TokenType.Format): FormatToken;
+export function findOne(node: Token, type: TokenType.Search): SearchToken;
+export function findOne(node: Token, type: TokenType): Token;
+export function findOne(node: Token, type: any): Token {
   let rt: Token;
   createTraverser({
     [type]: (v: Token) => {

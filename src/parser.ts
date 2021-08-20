@@ -5,6 +5,7 @@ import * as ODataUri from './odataUri';
 import * as PrimitiveLiteral from './primitiveLiteral';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';
+import { QueryOptionsToken } from './token';
 
 export const parserFactory = function(fn) {
   return function(source, options) {
@@ -41,7 +42,7 @@ export class Parser {
   resourcePath(source: string, options?: any): Lexer.Token {
     return parserFactory(ResourcePath.resourcePath)(source, options);
   }
-  query(source: string, options?: any): Lexer.Token {
+  query(source: string, options?: any): QueryOptionsToken {
     return parserFactory(Query.queryOptions)(source, options);
   }
   filter(source: string, options?: any): Lexer.Token {

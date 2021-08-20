@@ -1,8 +1,9 @@
 import { get } from '@newdash/newdash';
+import { PrimitiveTypeEnum } from '@odata/metadata';
 import { defaultParser, ODataFilter, ODataParam } from '../src';
 import { TokenType } from '../src/lexer';
 import { Parser } from '../src/parser';
-import { findAll, findOne } from '../src/utils';
+import { findAll, findOne, isType } from '../src/utils';
 
 describe('Query Test Suite', () => {
 
@@ -27,11 +28,28 @@ describe('Query Test Suite', () => {
   });
 
   it('should parse $top', () => {
-    expect(parser.query('$top=1').value.options[0].value.raw).toEqual('1');
+
+    const ast = parser.query('$top=1');
+
+    expect(ast.value.options[0].type).toBe(TokenType.Top);
+
+    if (isType(ast.value.options[0], TokenType.Top)) {
+      expect(ast.value.options[0].value.raw).toEqual('1');
+    }
+
   });
 
   it('should parse $top and $skip', () => {
-    expect(parser.query('$top=1&$skip=120').value.options[0].value.raw).toEqual('1');
+    const ast = defaultParser.query('$top=1&$skip=120');
+    expect(ast.value.options[0].type).toBe(TokenType.Top);
+    expect(ast.value.options[1].type).toBe(TokenType.Skip);
+
+    if (isType(ast.value.options[0], TokenType.Top)) {
+      expect(ast.value.options[0].value.raw).toEqual('1');
+    }
+    if (isType(ast.value.options[1], TokenType.Skip)) {
+      expect(ast.value.options[1].value.raw).toEqual('120');
+    }
   });
 
   it('should parse $select', () => {
@@ -96,11 +114,26 @@ describe('Query Test Suite', () => {
       .toString();
     const ast = defaultParser.query(u1);
 
-    expect(findOne(ast, TokenType.Top).value.raw).toBe('1');
+    expect(findOne(ast, TokenType.Filter).value).not.toBeNull();
+
+    expect(findOne(ast, TokenType.Top)).toMatchObject({
+      type: TokenType.Top,
+      value: {
+        type: TokenType.Literal,
+        value: PrimitiveTypeEnum.Int32
+      }
+    });
     expect(findOne(ast, TokenType.Skip).value.raw).toBe('10');
 
     expect(findOne(ast, TokenType.Format).value.format).toBe('json');
-    expect(findOne(ast, TokenType.Expand).value.items.map((item) => item.raw)).toStrictEqual(['F1', 'F2']);
+    expect(findOne(ast, TokenType.Search).value.value).toBe('A');
+
+    expect(
+      findOne(ast, TokenType.Expand)
+        .value
+        .items
+        .map((item) => item.raw)
+    ).toStrictEqual(['F1', 'F2']);
 
   });
 
