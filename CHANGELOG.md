@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.12](https://github.com/Soontao/odata-v4-parser/compare/v0.2.11...v0.2.12) (2022-11-15)
+
+
+### Bug Fixes
+
+* point ([723e095](https://github.com/Soontao/odata-v4-parser/commit/723e0955cbabee81cd4d36abecf9bd75a0a0660e))
+
 ### [0.2.11](https://github.com/Soontao/odata-v4-parser/compare/v0.2.10...v0.2.11) (2022-04-05)
 
 
