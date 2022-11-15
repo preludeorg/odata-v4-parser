@@ -41,6 +41,20 @@ describe('Primitive literals from json', () => {
     expect(t).not.toBeUndefined();
   });
 
+
+  it('should support geography - POINT', () => {
+    const t = defaultParser.literal("geography'POINT(-127.89734578345 45.234534534)'");
+    expect(t.value).toBe('Edm.GeographyPoint');
+    expect(t).not.toBeUndefined();
+  });
+
+  it('should support geography - FULL POINT', () => {
+    const t = defaultParser.literal("geography'SRID=12345;POINT(-127.89734578345 45.234534534)'");
+    expect(t.value).toBe('Edm.GeographyPoint');
+    expect(t).not.toBeUndefined();
+  });
+
+
 });
 
 function getLiteralFunctionName(itemRule) {

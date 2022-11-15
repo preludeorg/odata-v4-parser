@@ -160,7 +160,7 @@ export function int64Value(value: SourceArray, index: number): Lexer.Token {
     if (
       val >= '0' &&
       val <=
-        (value[start] === 0x2d ? '9223372036854775808' : '9223372036854775807')
+      (value[start] === 0x2d ? '9223372036854775808' : '9223372036854775807')
     ) {
       return Lexer.tokenize(
         value,
@@ -645,12 +645,14 @@ export function pointData(value: SourceArray, index: number): Lexer.Token {
 export function lineStringData(value: SourceArray, index: number): Lexer.Token {
   return multiGeoLiteralFactory(value, index, '', positionLiteral);
 }
+
 export function ringLiteral(value: SourceArray, index: number): Lexer.Token {
   return multiGeoLiteralFactory(value, index, '', positionLiteral);
   // Within each ringLiteral, the first and last positionLiteral elements MUST be an exact syntactic match to each other.
   // Within the polygonData, the ringLiterals MUST specify their points in appropriate winding order.
   // In order of traversal, points to the left side of the ring are interpreted as being in the polygon.
 }
+
 export function polygonData(value: SourceArray, index: number): Lexer.Token {
   return multiGeoLiteralFactory(value, index, '', ringLiteral);
 }
@@ -682,7 +684,12 @@ export function sridLiteral(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, 'SRID', Lexer.TokenType.Literal);
 }
 export function pointLiteral(value: SourceArray, index: number): Lexer.Token {
-  if (!Utils.equals(value, index, 'Point')) {
+  if (
+    !(
+      Utils.equals(value, index, 'Point') ||
+      Utils.equals(value, index, 'POINT')
+    )
+  ) {
     return;
   }
   const start = index;
@@ -1033,13 +1040,8 @@ export function geographyMultiPolygon(
   );
 }
 export function geographyPoint(value: SourceArray, index: number): Lexer.Token {
-  return geoLiteralFactory(
-    value,
-    index,
-    'Edm.GeographyPoint',
-    Lexer.geographyPrefix,
-    fullPointLiteral
-  );
+  return geoLiteralFactory(value, index, 'Edm.GeographyPoint', Lexer.geographyPrefix, fullPointLiteral)
+    || geoLiteralFactory(value, index, 'Edm.GeographyPoint', Lexer.geographyPrefix, pointLiteral);
 }
 export function geographyPolygon(
   value: SourceArray,
