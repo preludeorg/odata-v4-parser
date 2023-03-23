@@ -57,7 +57,7 @@ describe('Visitor Parse Suite', () => {
 
   it('should support visit undefined', () => {
     const { visit, visitSequence } = createSeqTraverser(true);
-    visit(undefined);
+    visit(undefined as any);
   });
 
 });

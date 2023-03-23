@@ -15,6 +15,8 @@ const ast = defaultParser.odataUri("/Categories(10)?$expand=A,C&$select=D,E")
 // process it
 ```
 
+<!-- TODO: tranverser doc -->
+
 ## Usage - OData QueryParam/Filter Builder
 
 ```ts
