@@ -1,0 +1,127 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Filter Test Suite shuold support filter with double quote 1`] = `"$filter=key eq 'val\\"'"`;
+
+exports[`Filter Test Suite shuold support filter with double quote 2`] = `
+Token {
+  "next": 21,
+  "position": 0,
+  "raw": "$filter=key eq 'val\\"'",
+  "type": "QueryOptions",
+  "value": Object {
+    "options": Array [
+      Token {
+        "next": 21,
+        "position": 0,
+        "raw": "$filter=key eq 'val\\"'",
+        "type": "Filter",
+        "value": Token {
+          "next": 21,
+          "position": 8,
+          "raw": "key eq 'val\\"'",
+          "type": "EqualsExpression",
+          "value": Object {
+            "left": Token {
+              "next": 11,
+              "position": 8,
+              "raw": "key",
+              "type": "FirstMemberExpression",
+              "value": Token {
+                "next": 11,
+                "position": 8,
+                "raw": "key",
+                "type": "MemberExpression",
+                "value": Token {
+                  "next": 11,
+                  "position": 8,
+                  "raw": "key",
+                  "type": "PropertyPathExpression",
+                  "value": Token {
+                    "next": 11,
+                    "position": 8,
+                    "raw": "key",
+                    "type": "ODataIdentifier",
+                    "value": Object {
+                      "name": "key",
+                    },
+                  },
+                },
+              },
+            },
+            "right": Token {
+              "next": 21,
+              "position": 15,
+              "raw": "'val\\"'",
+              "type": "Literal",
+              "value": "Edm.String",
+            },
+          },
+        },
+      },
+    ],
+  },
+}
+`;
+
+exports[`Filter Test Suite shuold support filter without double quote 1`] = `"$filter=key eq 'val'"`;
+
+exports[`Filter Test Suite shuold support filter without double quote 2`] = `
+Token {
+  "next": 20,
+  "position": 0,
+  "raw": "$filter=key eq 'val'",
+  "type": "QueryOptions",
+  "value": Object {
+    "options": Array [
+      Token {
+        "next": 20,
+        "position": 0,
+        "raw": "$filter=key eq 'val'",
+        "type": "Filter",
+        "value": Token {
+          "next": 20,
+          "position": 8,
+          "raw": "key eq 'val'",
+          "type": "EqualsExpression",
+          "value": Object {
+            "left": Token {
+              "next": 11,
+              "position": 8,
+              "raw": "key",
+              "type": "FirstMemberExpression",
+              "value": Token {
+                "next": 11,
+                "position": 8,
+                "raw": "key",
+                "type": "MemberExpression",
+                "value": Token {
+                  "next": 11,
+                  "position": 8,
+                  "raw": "key",
+                  "type": "PropertyPathExpression",
+                  "value": Token {
+                    "next": 11,
+                    "position": 8,
+                    "raw": "key",
+                    "type": "ODataIdentifier",
+                    "value": Object {
+                      "name": "key",
+                    },
+                  },
+                },
+              },
+            },
+            "right": Token {
+              "next": 20,
+              "position": 15,
+              "raw": "'val'",
+              "type": "Literal",
+              "value": "Edm.String",
+            },
+          },
+        },
+      },
+    ],
+  },
+}
+`;

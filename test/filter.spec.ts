@@ -1,6 +1,6 @@
 import { get } from '@newdash/newdash';
 import { Edm } from '@odata/metadata';
-import { defaultParser, ODataFilter } from '../src';
+import { defaultParser, ODataFilter, ODataParam } from '../src';
 
 
 describe('Filter Test Suite', () => {
@@ -17,8 +17,24 @@ describe('Filter Test Suite', () => {
     const ast = defaultParser.query("$filter=A eq 702dac82-923d-4958-805b-ca41c593d74f and B eq 'strValue'");
     expect(ast).not.toBeNull();
     expect(get(ast, 'value.options[0].value.value.left.value.right.value')).toBe(Edm.Guid.className);
-    expect(get(ast,'value.options[0].value.value.right.value.right.value')).toBe(Edm.String.className);
+    expect(get(ast, 'value.options[0].value.value.right.value.right.value')).toBe(Edm.String.className);
   });
+  
+  it('shuold support filter without double quote', () => {
+    const filter = ODataFilter.New().field("key").eq('val')
+    const filterStr = ODataParam.New().filter(filter).toString()
+    expect(filterStr).toMatchSnapshot()
+    const ast = defaultParser.query(filterStr)
+    expect(ast).toMatchSnapshot()
+  })
+
+  it('shuold support filter with double quote', () => {
+    const filter = ODataFilter.New().field("key").eq('val"')
+    const filterStr = ODataParam.New().filter(filter).toString()
+    expect(filterStr).toMatchSnapshot()
+    const ast = defaultParser.query(filterStr)
+    expect(ast).toMatchSnapshot()
+  })
 
   it('should support complex filter', () => {
 

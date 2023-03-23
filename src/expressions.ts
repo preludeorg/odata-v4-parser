@@ -62,7 +62,7 @@ export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
   }
 
   let commonMoreExpr = undefined;
-  if (token.type === Lexer.TokenType.CommonExpression) {
+  if (token. type === Lexer.TokenType.CommonExpression) {
     commonMoreExpr =
       eqExpr(value, token.next) ||
       neExpr(value, token.next) ||

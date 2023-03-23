@@ -430,6 +430,7 @@ export function pchar(value: SourceArray, index: number): number {
     index
   );
 }
+
 export function pcharNoSQUOTE(value: SourceArray, index: number): number {
   if (
     unreserved(value[index]) ||
@@ -438,11 +439,13 @@ export function pcharNoSQUOTE(value: SourceArray, index: number): number {
   ) {
     return index + 1;
   }
+  // TODO: review here, maybe additional token required.
   return (
     otherDelims(value, index) ||
     EQ(value, index) ||
     COLON(value, index) ||
     AT(value, index) ||
+    quotationMark(value, index) ||
     pctEncodedNoSQUOTE(value, index) ||
     index
   );
