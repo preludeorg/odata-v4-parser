@@ -268,6 +268,7 @@ export function singleValue(value: SourceArray, index: number): Lexer.Token {
   return token;
 }
 export function stringValue(value: SourceArray, index: number): Lexer.Token {
+  // TODO: handle values with double single quote `THeo''Sun A`
   const start = index;
   let squote = Lexer.SQUOTE(value, start);
   if (squote) {
