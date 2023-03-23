@@ -298,7 +298,7 @@ export function stringValue(value: SourceArray, index: number): Lexer.Token {
       } else {
         const nextIndex = Math.max(
           Lexer.RWS(value, index),
-          Lexer.pcharNoSQUOTE(value, index),
+          Lexer.pcharNoSQUOTE(value, index)
         );
         if (nextIndex === index) {
           return;
@@ -355,7 +355,7 @@ export function durationValue(value: SourceArray, index: number): Lexer.Token {
   let end = index;
   if (value[index] === 0x54) {
     index++;
-    const parseTimeFn = function () {
+    const parseTimeFn = function() {
       const squote = Lexer.SQUOTE(value, index);
       if (squote) {
         return index;
