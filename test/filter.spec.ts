@@ -28,6 +28,14 @@ describe('Filter Test Suite', () => {
     expect(ast).toMatchSnapshot()
   })
 
+  it('shuold support filter with other chars', () => {
+    const filter = ODataFilter.New().field("key").eq('val$%^&*()_')
+    const filterStr = ODataParam.New().filter(filter).toString()
+    expect(filterStr).toMatchSnapshot()
+    const ast = defaultParser.query(filterStr)
+    expect(ast).toMatchSnapshot()
+  })
+
   it('shuold support filter with double quote', () => {
     const filter = ODataFilter.New().field("key").eq('val"')
     const filterStr = ODataParam.New().filter(filter).toString()

@@ -63,6 +63,69 @@ Token {
 }
 `;
 
+exports[`Filter Test Suite shuold support filter with other chars 1`] = `"$filter=key eq 'val$%^&*()_'"`;
+
+exports[`Filter Test Suite shuold support filter with other chars 2`] = `
+Token {
+  "next": 28,
+  "position": 0,
+  "raw": "$filter=key eq 'val$%^&*()_'",
+  "type": "QueryOptions",
+  "value": Object {
+    "options": Array [
+      Token {
+        "next": 28,
+        "position": 0,
+        "raw": "$filter=key eq 'val$%^&*()_'",
+        "type": "Filter",
+        "value": Token {
+          "next": 28,
+          "position": 8,
+          "raw": "key eq 'val$%^&*()_'",
+          "type": "EqualsExpression",
+          "value": Object {
+            "left": Token {
+              "next": 11,
+              "position": 8,
+              "raw": "key",
+              "type": "FirstMemberExpression",
+              "value": Token {
+                "next": 11,
+                "position": 8,
+                "raw": "key",
+                "type": "MemberExpression",
+                "value": Token {
+                  "next": 11,
+                  "position": 8,
+                  "raw": "key",
+                  "type": "PropertyPathExpression",
+                  "value": Token {
+                    "next": 11,
+                    "position": 8,
+                    "raw": "key",
+                    "type": "ODataIdentifier",
+                    "value": Object {
+                      "name": "key",
+                    },
+                  },
+                },
+              },
+            },
+            "right": Token {
+              "next": 28,
+              "position": 15,
+              "raw": "'val$%^&*()_'",
+              "type": "Literal",
+              "value": "Edm.String",
+            },
+          },
+        },
+      },
+    ],
+  },
+}
+`;
+
 exports[`Filter Test Suite shuold support filter with single quote 1`] = `"$filter=key eq 'T''A First'"`;
 
 exports[`Filter Test Suite shuold support filter with single quote 2`] = `
