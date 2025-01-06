@@ -19,6 +19,16 @@ describe('Parser', () => {
     expect(ast.value.options[0].type).toEqual('Filter');
   });
 
+  it('should parse functions with parameters', () => {
+    const parser = new Parser();
+    const ast = parser.filter("matchespattern(Title, '^foo.+')");
+    expect(ast.type).toEqual('MethodCallExpression');
+    expect(ast.value.method).toEqual('matchespattern');
+    expect(ast.value.parameters[0].raw).toEqual('Title');
+    expect(ast.value.parameters[1].raw).toEqual("'^foo.+'");
+    expect(ast.value.parameters[1].value).toEqual('Edm.String');
+  });
+
   it('should parse multiple orderby params', () => {
     const parser = new Parser();
     const ast = parser.query('$orderby=foo,bar');
@@ -49,11 +59,9 @@ describe('Parser', () => {
       expect(ast.value.options[1].value.key).toEqual('bar');
       expect(ast.value.options[1].value.value).toEqual('foobar');
     }
-
   });
 
   it('should throw error parsing invalid custom query options', () => {
     expect(() => {defaultParser.query('$foo=123');}).toThrow();
   });
-
 });

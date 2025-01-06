@@ -343,6 +343,7 @@ export function boolMethodCallExpr(
     endsWithMethodCallExpr(value, index) ||
     startsWithMethodCallExpr(value, index) ||
     containsMethodCallExpr(value, index) ||
+    matchesPatternMethodCallExpr(value, index) ||
     intersectsMethodCallExpr(value, index)
   );
 }
@@ -463,6 +464,12 @@ export function endsWithMethodCallExpr(
   index: number
 ): Lexer.Token {
   return methodCallExprFactory(value, index, 'endswith', 2);
+}
+export function matchesPatternMethodCallExpr(
+  value: SourceArray,
+  index: number
+): Lexer.Token {
+  return methodCallExprFactory(value, index, 'matchespattern', 2);
 }
 export function lengthMethodCallExpr(
   value: SourceArray,
