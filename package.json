@@ -26,6 +26,7 @@
   "license": "MIT",
   "scripts": {
     "prebuild": "npm run lint",
+    "prepare": "tsc",
     "build": "tsc",
     "lint": "eslint src/** --fix",
     "coverage": "npm test -- --coverage --no-cache",
