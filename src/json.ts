@@ -47,7 +47,7 @@ export function complexColInUri(
     index = end;
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Array);
+  return Lexer.tokenize(value, start, index, { items }, 'Array');
 }
 
 export function complexInUri(value: SourceArray, index: number): Lexer.Token {
@@ -100,7 +100,7 @@ export function complexInUri(value: SourceArray, index: number): Lexer.Token {
     index = end;
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Object);
+  return Lexer.tokenize(value, start, index, { items }, 'Object');
 }
 
 export function collectionPropertyInUri(
@@ -136,7 +136,7 @@ export function collectionPropertyInUri(
   index = separator;
 
   const propValue =
-    prop.type === Lexer.TokenType.PrimitiveCollectionProperty
+    prop.type === 'PrimitiveCollectionProperty'
       ? primitiveColInUri(value, index)
       : complexColInUri(value, index);
 
@@ -150,7 +150,7 @@ export function collectionPropertyInUri(
     start,
     index,
     { key: prop, value: propValue },
-    Lexer.TokenType.Property
+    'Property'
   );
 }
 
@@ -197,7 +197,7 @@ export function primitiveColInUri(
     index = end;
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Array);
+  return Lexer.tokenize(value, start, index, { items }, 'Array');
 }
 
 export function complexPropertyInUri(
@@ -240,7 +240,7 @@ export function complexPropertyInUri(
     start,
     index,
     { key: prop, value: propValue },
-    Lexer.TokenType.Property
+    'Property'
   );
 }
 
@@ -311,7 +311,7 @@ export function annotationInUri(
       }`,
       value: token
     },
-    Lexer.TokenType.Annotation
+    'Annotation'
   );
 }
 
@@ -357,7 +357,7 @@ export function keyValuePairInUri(
     start,
     index,
     { key: prop, value: propValue },
-    Lexer.TokenType.Property
+    'Property'
   );
 }
 
@@ -446,7 +446,7 @@ export function rootExprCol(value: SourceArray, index: number): Lexer.Token {
     index = end;
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Array);
+  return Lexer.tokenize(value, start, index, { items }, 'Array');
 }
 
 export function primitiveLiteralInJSON(
@@ -481,7 +481,7 @@ export function stringInJSON(value: SourceArray, index: number): Lexer.Token {
   }
   index = mark;
 
-  return Lexer.tokenize(value, start, index, 'string', Lexer.TokenType.Literal);
+  return Lexer.tokenize(value, start, index, 'string', 'Literal');
 }
 
 export function charInJSON(value: SourceArray, index: number): number {
@@ -539,7 +539,7 @@ export function booleanInJSON(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 4,
       'boolean',
-      Lexer.TokenType.Literal
+      'Literal'
     );
   }
   if (Utils.equals(value, index, 'false')) {
@@ -548,7 +548,7 @@ export function booleanInJSON(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 5,
       'boolean',
-      Lexer.TokenType.Literal
+      'Literal'
     );
   }
 }
@@ -560,7 +560,7 @@ export function nullInJSON(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 4,
       'null',
-      Lexer.TokenType.Literal
+      'Literal'
     );
   }
 }
@@ -578,7 +578,7 @@ export function arrayOrObject(value: SourceArray, index: number): Lexer.Token {
       index,
       token.next,
       token,
-      Lexer.TokenType.ArrayOrObject
+      'ArrayOrObject'
     );
   }
 }

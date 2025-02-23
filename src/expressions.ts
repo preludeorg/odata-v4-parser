@@ -39,13 +39,7 @@ export function commonExpr(value: SourceArray, index: number): Lexer.Token {
   }
 
   if (token) {
-    return Lexer.tokenize(
-      value,
-      token.position,
-      token.next,
-      token,
-      Lexer.TokenType.CommonExpression
-    );
+    return Lexer.tokenize({ ...token, value: token, type: 'CommonExpression' }, value);
   }
 }
 
@@ -62,7 +56,7 @@ export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
   }
 
   let commonMoreExpr = undefined;
-  if (token. type === Lexer.TokenType.CommonExpression) {
+  if (token.type === 'CommonExpression') {
     commonMoreExpr =
       eqExpr(value, token.next) ||
       neExpr(value, token.next) ||
@@ -96,21 +90,19 @@ export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
     token.raw = Utils.stringify(value, token.position, token.next);
 
     if (
-      token.type === Lexer.TokenType.AndExpression &&
-      token.value.right.type === Lexer.TokenType.OrExpression
+      token.type === 'AndExpression' &&
+      token.value.right.type === 'OrExpression'
     ) {
       token.value.left = Lexer.tokenize(
-        value,
-        token.value.left.position,
-        token.value.right.value.left.next,
         {
-          left: token.value.left,
-          right: token.value.right.value.left
+          type: token.type,
+          value: { left: token.value.left, right: token.value.right },
+          position: token.value.left.position,
+          next: token.value.right.value.left.next
         },
-        token.type
+        value
       );
-      token.type = token.value.right.type;
-      token.value.right = token.value.right.value.right;
+      return { ...token, type: token.value.right.type, value: token.value.right.value.right };
     }
   }
 
@@ -139,7 +131,7 @@ export function andExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     index,
     token,
-    Lexer.TokenType.AndExpression
+    'AndExpression'
   );
 }
 
@@ -165,7 +157,7 @@ export function orExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     index,
     token,
-    Lexer.TokenType.OrExpression
+    'OrExpression'
   );
 }
 
@@ -198,17 +190,17 @@ export function leftRightExpr(
   return Lexer.tokenize(value, start, index, token.value, tokenType);
 }
 export function eqExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'eq', Lexer.TokenType.EqualsExpression);
+  return leftRightExpr(value, index, 'eq', 'EqualsExpression');
 }
 export function neExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'ne', Lexer.TokenType.NotEqualsExpression);
+  return leftRightExpr(value, index, 'ne', 'NotEqualsExpression');
 }
 export function ltExpr(value: SourceArray, index: number): Lexer.Token {
   return leftRightExpr(
     value,
     index,
     'lt',
-    Lexer.TokenType.LesserThanExpression
+    'LesserThanExpression'
   );
 }
 export function leExpr(value: SourceArray, index: number): Lexer.Token {
@@ -216,7 +208,7 @@ export function leExpr(value: SourceArray, index: number): Lexer.Token {
     value,
     index,
     'le',
-    Lexer.TokenType.LesserOrEqualsExpression
+    'LesserOrEqualsExpression'
   );
 }
 export function gtExpr(value: SourceArray, index: number): Lexer.Token {
@@ -224,7 +216,7 @@ export function gtExpr(value: SourceArray, index: number): Lexer.Token {
     value,
     index,
     'gt',
-    Lexer.TokenType.GreaterThanExpression
+    'GreaterThanExpression'
   );
 }
 export function geExpr(value: SourceArray, index: number): Lexer.Token {
@@ -232,27 +224,27 @@ export function geExpr(value: SourceArray, index: number): Lexer.Token {
     value,
     index,
     'ge',
-    Lexer.TokenType.GreaterOrEqualsExpression
+    'GreaterOrEqualsExpression'
   );
 }
 export function hasExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'has', Lexer.TokenType.HasExpression);
+  return leftRightExpr(value, index, 'has', 'HasExpression');
 }
 
 export function addExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'add', Lexer.TokenType.AddExpression);
+  return leftRightExpr(value, index, 'add', 'AddExpression');
 }
 export function subExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'sub', Lexer.TokenType.SubExpression);
+  return leftRightExpr(value, index, 'sub', 'SubExpression');
 }
 export function mulExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'mul', Lexer.TokenType.MulExpression);
+  return leftRightExpr(value, index, 'mul', 'MulExpression');
 }
 export function divExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'div', Lexer.TokenType.DivExpression);
+  return leftRightExpr(value, index, 'div', 'DivExpression');
 }
 export function modExpr(value: SourceArray, index: number): Lexer.Token {
-  return leftRightExpr(value, index, 'mod', Lexer.TokenType.ModExpression);
+  return leftRightExpr(value, index, 'mod', 'ModExpression');
 }
 
 export function notExpr(value: SourceArray, index: number): Lexer.Token {
@@ -276,7 +268,7 @@ export function notExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     token.next,
     token,
-    Lexer.TokenType.NotExpression
+    'NotExpression'
   );
 }
 
@@ -304,7 +296,7 @@ export function boolParenExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     index,
     token,
-    Lexer.TokenType.BoolParenExpression
+    'BoolParenExpression'
   );
 }
 export function parenExpr(value: SourceArray, index: number): Lexer.Token {
@@ -331,7 +323,7 @@ export function parenExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     index,
     token.value,
-    Lexer.TokenType.ParenExpression
+    'ParenExpression'
   );
 }
 
@@ -444,7 +436,7 @@ export function methodCallExprFactory(
       method,
       parameters
     },
-    Lexer.TokenType.MethodCallExpression
+    'MethodCallExpression'
   );
 }
 export function containsMethodCallExpr(
@@ -687,7 +679,7 @@ export function isofExpr(value: SourceArray, index: number): Lexer.Token {
       target: expr,
       typename: typeName
     },
-    Lexer.TokenType.IsOfExpression
+    'IsOfExpression'
   );
 }
 export function castExpr(value: SourceArray, index: number): Lexer.Token {
@@ -733,7 +725,7 @@ export function castExpr(value: SourceArray, index: number): Lexer.Token {
       target: expr,
       typename: typeName
     },
-    Lexer.TokenType.CastExpression
+    'CastExpression'
   );
 }
 
@@ -754,7 +746,7 @@ export function negateExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     expr.next,
     expr,
-    Lexer.TokenType.NegateExpression
+    'NegateExpression'
   );
 }
 
@@ -779,7 +771,7 @@ export function firstMemberExpr(
         start,
         member.next,
         [token, member],
-        Lexer.TokenType.FirstMemberExpression
+        'FirstMemberExpression'
       );
     }
   } else {
@@ -796,7 +788,7 @@ export function firstMemberExpr(
     start,
     token.next,
     token,
-    Lexer.TokenType.FirstMemberExpression
+    'FirstMemberExpression'
   );
 }
 export function memberExpr(value: SourceArray, index: number): Lexer.Token {
@@ -821,7 +813,7 @@ export function memberExpr(value: SourceArray, index: number): Lexer.Token {
     start,
     next.next,
     token ? { name: token, value: next } : next,
-    Lexer.TokenType.MemberExpression
+    'MemberExpression'
   );
 }
 export function propertyPathExpr(
@@ -861,9 +853,11 @@ export function propertyPathExpr(
     start,
     index,
     token,
-    Lexer.TokenType.PropertyPathExpression
+    'PropertyPathExpression'
   );
 }
+
+let isLambdaPredicate = false;
 export function inscopeVariableExpr(
   value: SourceArray,
   index: number
@@ -873,6 +867,7 @@ export function inscopeVariableExpr(
     (isLambdaPredicate ? lambdaVariableExpr(value, index) : undefined)
   );
 }
+
 export function implicitVariableExpr(
   value: SourceArray,
   index: number
@@ -887,7 +882,6 @@ export function implicitVariableExpr(
     );
   }
 }
-let isLambdaPredicate = false;
 let hasLambdaVariableExpr = false;
 export function lambdaVariableExpr(
   value: SourceArray,
@@ -896,7 +890,7 @@ export function lambdaVariableExpr(
   const token = NameOrIdentifier.odataIdentifier(
     value,
     index,
-    Lexer.TokenType.LambdaVariableExpression
+    'LambdaVariableExpression'
   );
   if (token) {
     hasLambdaVariableExpr = true;
@@ -917,7 +911,7 @@ export function lambdaPredicateExpr(
       token.position,
       token.next,
       token,
-      Lexer.TokenType.LambdaPredicateExpression
+      'LambdaPredicateExpression'
     );
   }
 }
@@ -965,7 +959,7 @@ export function anyExpr(value: SourceArray, index: number): Lexer.Token {
       variable,
       predicate
     },
-    Lexer.TokenType.AnyExpression
+    'AnyExpression'
   );
 }
 export function allExpr(value: SourceArray, index: number): Lexer.Token {
@@ -1020,7 +1014,7 @@ export function allExpr(value: SourceArray, index: number): Lexer.Token {
       variable,
       predicate
     },
-    Lexer.TokenType.AllExpression
+    'AllExpression'
   );
 }
 
@@ -1065,7 +1059,7 @@ export function collectionNavigationExpr(
         navigation,
         path
       },
-      Lexer.TokenType.CollectionNavigationExpression
+      'CollectionNavigationExpression'
     );
   }
 }
@@ -1114,7 +1108,7 @@ export function simpleKey(
     start,
     close,
     { key, value: token },
-    Lexer.TokenType.SimpleKey
+    'SimpleKey'
   );
 }
 export function compoundKey(value: SourceArray, index: number): Lexer.Token {
@@ -1148,7 +1142,7 @@ export function compoundKey(value: SourceArray, index: number): Lexer.Token {
   }
   index = close;
 
-  return Lexer.tokenize(value, start, index, keys, Lexer.TokenType.CompoundKey);
+  return Lexer.tokenize(value, start, index, keys, 'CompoundKey');
 }
 export function keyValuePair(value: SourceArray, index: number): Lexer.Token {
   const prop =
@@ -1173,7 +1167,7 @@ export function keyValuePair(value: SourceArray, index: number): Lexer.Token {
         key: prop,
         value: val
       },
-      Lexer.TokenType.KeyValuePair
+      'KeyValuePair'
     );
   }
 }
@@ -1183,7 +1177,7 @@ export function keyPropertyValue(
 ): Lexer.Token {
   const token = PrimitiveLiteral.primitiveLiteral(value, index);
   if (token) {
-    token.type = Lexer.TokenType.KeyPropertyValue;
+    token.type = 'KeyPropertyValue';
     return token;
   }
 }
@@ -1194,7 +1188,7 @@ export function keyPropertyAlias(
   return NameOrIdentifier.odataIdentifier(
     value,
     index,
-    Lexer.TokenType.KeyPropertyAlias
+    'KeyPropertyAlias'
   );
 }
 
@@ -1212,7 +1206,7 @@ export function singleNavigationExpr(
       index,
       member.next,
       member,
-      Lexer.TokenType.SingleNavigationExpression
+      'SingleNavigationExpression'
     );
   }
 }
@@ -1236,7 +1230,7 @@ export function collectionPathExpr(
       index,
       token.next,
       token,
-      Lexer.TokenType.CollectionPathExpression
+      'CollectionPathExpression'
     );
   }
 }
@@ -1266,7 +1260,7 @@ export function complexPathExpr(
       start,
       expr.next,
       token ? [token, expr] : [expr],
-      Lexer.TokenType.ComplexPathExpression
+      'ComplexPathExpression'
     );
   }
 }
@@ -1281,7 +1275,7 @@ export function singlePathExpr(value: SourceArray, index: number): Lexer.Token {
       index,
       boundFunction.next,
       boundFunction,
-      Lexer.TokenType.SinglePathExpression
+      'SinglePathExpression'
     );
   }
 }
@@ -1330,7 +1324,7 @@ export function functionExpr(value: SourceArray, index: number): Lexer.Token {
       params,
       expression: expr
     },
-    Lexer.TokenType.FunctionExpression
+    'FunctionExpression'
   );
 }
 export function boundFunctionExpr(
@@ -1379,7 +1373,7 @@ export function functionExprParameters(
     start,
     index,
     params,
-    Lexer.TokenType.FunctionExpressionParameters
+    'FunctionExpressionParameters'
   );
 }
 export function functionExprParameter(
@@ -1411,14 +1405,14 @@ export function functionExprParameter(
       name,
       value: param
     },
-    Lexer.TokenType.FunctionExpressionParameter
+    'FunctionExpressionParameter'
   );
 }
 export function parameterName(value: SourceArray, index: number): Lexer.Token {
   return NameOrIdentifier.odataIdentifier(
     value,
     index,
-    Lexer.TokenType.ParameterName
+    'ParameterName'
   );
 }
 export function parameterAlias(value: SourceArray, index: number): Lexer.Token {
@@ -1433,7 +1427,7 @@ export function parameterAlias(value: SourceArray, index: number): Lexer.Token {
       index,
       id.next,
       id.value,
-      Lexer.TokenType.ParameterAlias
+      'ParameterAlias'
     );
   }
 }
@@ -1446,7 +1440,7 @@ export function parameterValue(value: SourceArray, index: number): Lexer.Token {
       index,
       token.next,
       token.value,
-      Lexer.TokenType.ParameterValue
+      'ParameterValue'
     );
   }
 }
@@ -1458,7 +1452,7 @@ export function countExpr(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 7,
       '/$count',
-      Lexer.TokenType.CountExpression
+      'CountExpression'
     );
   }
 }
@@ -1469,7 +1463,7 @@ export function refExpr(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 5,
       '/$ref',
-      Lexer.TokenType.RefExpression
+      'RefExpression'
     );
   }
 }
@@ -1480,7 +1474,7 @@ export function valueExpr(value: SourceArray, index: number): Lexer.Token {
       index,
       index + 7,
       '/$value',
-      Lexer.TokenType.ValueExpression
+      'ValueExpression'
     );
   }
 }
@@ -1526,6 +1520,6 @@ export function rootExpr(value: SourceArray, index: number): Lexer.Token {
       current: token,
       next: nav
     },
-    Lexer.TokenType.RootExpression
+    'RootExpression'
   );
 }
