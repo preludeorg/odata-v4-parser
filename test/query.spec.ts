@@ -1,9 +1,8 @@
 import { get } from '@newdash/newdash';
 import { PrimitiveTypeEnum } from '@odata/metadata';
 import { defaultParser, ODataFilter, ODataParam } from '../src';
-import { TokenType } from '../src/lexer';
 import { Parser } from '../src/parser';
-import { findAll, findOne, isType } from '../src/utils';
+import { findAll, findOne } from '../src/utils';
 
 describe('Query Test Suite', () => {
 
@@ -18,37 +17,35 @@ describe('Query Test Suite', () => {
   ];
 
   expands.forEach(([original, parsed]) => {
-
     it(`should parse ${original}`, () => {
-
       expect(parser.query(original).value.options[0].value.items[0].raw).toEqual(parsed);
-
     });
-
   });
 
   it('should parse $top', () => {
-
     const ast = parser.query('$top=1');
+    const opt = ast.value.options[0];
 
-    expect(ast.value.options[0].type).toBe(TokenType.Top);
+    expect(opt.type).toBe('Top');
 
-    if (isType(ast.value.options[0], TokenType.Top)) {
-      expect(ast.value.options[0].value.raw).toEqual('1');
+    if (opt.type === 'Top') {
+      expect(opt.value.raw).toEqual('1');
     }
-
   });
 
   it('should parse $top and $skip', () => {
     const ast = defaultParser.query('$top=1&$skip=120');
-    expect(ast.value.options[0].type).toBe(TokenType.Top);
-    expect(ast.value.options[1].type).toBe(TokenType.Skip);
+    const opt1 = ast.value.options[0];
+    const opt2 = ast.value.options[1];
 
-    if (isType(ast.value.options[0], TokenType.Top)) {
-      expect(ast.value.options[0].value.raw).toEqual('1');
+    expect(opt1.type).toBe('Top');
+    expect(opt2.type).toBe('Skip');
+
+    if (opt1.type === 'Top') {
+      expect(opt1.value.raw).toEqual('1');
     }
-    if (isType(ast.value.options[1], TokenType.Skip)) {
-      expect(ast.value.options[1].value.raw).toEqual('120');
+    if (opt2.type === 'Skip') {
+      expect(opt2.value.raw).toEqual('120');
     }
   });
 

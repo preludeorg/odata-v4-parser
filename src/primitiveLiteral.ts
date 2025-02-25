@@ -2,38 +2,20 @@ import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import Utils, { SourceArray } from './utils';
 
-export function nullValue(value: SourceArray, index: number): Lexer.Token {
+export function nullValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   if (Utils.equals(value, index, 'null')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 4,
-      'null',
-      Lexer.TokenType.Literal
-    );
+    return Lexer.tokenize({ type: 'Literal', value: 'null', position: index, next: index + 4 }, value);
   }
 }
-export function booleanValue(value: SourceArray, index: number): Lexer.Token {
+export function booleanValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   if (Utils.equals(value, index, 'true')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 4,
-      'Edm.Boolean',
-      Lexer.TokenType.Literal
-    );
+    return Lexer.tokenize({ type: 'Literal', value: 'Edm.Boolean', position: index, next: index + 4 }, value);
   }
   if (Utils.equals(value, index, 'false')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 5,
-      'Edm.Boolean',
-      Lexer.TokenType.Literal
-    );
+    return Lexer.tokenize({ type: 'Literal', value: 'Edm.Boolean', position: index, next: index + 5 }, value);
   }
 }
-export function guidValue(value, index): Lexer.Token {
+export function guidValue(value, index): Lexer.LiteralToken | undefined {
   if (
     Utils.required(value, index, Lexer.HEXDIG, 8, 8) &&
     value[index + 8] === 0x2d &&
@@ -45,16 +27,10 @@ export function guidValue(value, index): Lexer.Token {
     value[index + 23] === 0x2d &&
     Utils.required(value, index + 24, Lexer.HEXDIG, 12)
   ) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 36,
-      'Edm.Guid',
-      Lexer.TokenType.Literal
-    );
+    return Lexer.tokenize({ type: 'Literal', value: 'Edm.Guid', position: index, next: index + 36 }, value);
   }
 }
-export function sbyteValue(value: SourceArray, index: number): Lexer.Token {
+export function sbyteValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   const sign = Lexer.SIGN(value, index);
   if (sign) {
@@ -68,17 +44,11 @@ export function sbyteValue(value: SourceArray, index: number): Lexer.Token {
     }
     const val = parseInt(Utils.stringify(value, start, next), 10);
     if (val >= -128 && val <= 127) {
-      return Lexer.tokenize(
-        value,
-        start,
-        next,
-        'Edm.SByte',
-        Lexer.TokenType.Literal
-      );
+      return Lexer.tokenize({ type: 'Literal', value: 'Edm.SByte', position: start, next }, value);
     }
   }
 }
-export function byteValue(value: SourceArray, index: number): Lexer.Token {
+export function byteValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const next = Utils.required(value, index, Lexer.DIGIT, 1, 3);
   if (next) {
     if (Lexer.DIGIT(value[next])) {
@@ -86,17 +56,11 @@ export function byteValue(value: SourceArray, index: number): Lexer.Token {
     }
     const val = parseInt(Utils.stringify(value, index, next), 10);
     if (val >= 0 && val <= 255) {
-      return Lexer.tokenize(
-        value,
-        index,
-        next,
-        'Edm.Byte',
-        Lexer.TokenType.Literal
-      );
+      return Lexer.tokenize({ type: 'Literal', value: 'Edm.Byte', position: index, next }, value);
     }
   }
 }
-export function int16Value(value: SourceArray, index: number): Lexer.Token {
+export function int16Value(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   const sign = Lexer.SIGN(value, index);
   if (sign) {
@@ -110,17 +74,11 @@ export function int16Value(value: SourceArray, index: number): Lexer.Token {
     }
     const val = parseInt(Utils.stringify(value, start, next), 10);
     if (val >= -32768 && val <= 32767) {
-      return Lexer.tokenize(
-        value,
-        start,
-        next,
-        'Edm.Int16',
-        Lexer.TokenType.Literal
-      );
+      return Lexer.tokenize({ type: 'Literal', value: 'Edm.Int16', position: start, next }, value);
     }
   }
 }
-export function int32Value(value: SourceArray, index: number): Lexer.Token {
+export function int32Value(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   const sign = Lexer.SIGN(value, index);
   if (sign) {
@@ -134,17 +92,11 @@ export function int32Value(value: SourceArray, index: number): Lexer.Token {
     }
     const val = parseInt(Utils.stringify(value, start, next), 10);
     if (val >= -2147483648 && val <= 2147483647) {
-      return Lexer.tokenize(
-        value,
-        start,
-        next,
-        'Edm.Int32',
-        Lexer.TokenType.Literal
-      );
+      return Lexer.tokenize({ type: 'Literal', value: 'Edm.Int32', position: start, next }, value);
     }
   }
 }
-export function int64Value(value: SourceArray, index: number): Lexer.Token {
+export function int64Value(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   const sign = Lexer.SIGN(value, index);
   if (sign) {
@@ -162,17 +114,11 @@ export function int64Value(value: SourceArray, index: number): Lexer.Token {
       val <=
       (value[start] === 0x2d ? '9223372036854775808' : '9223372036854775807')
     ) {
-      return Lexer.tokenize(
-        value,
-        start,
-        next,
-        'Edm.Int64',
-        Lexer.TokenType.Literal
-      );
+      return Lexer.tokenize({ type: 'Literal', value: 'Edm.Int64', position: start, next }, value);
     }
   }
 }
-export function decimalValue(value: SourceArray, index: number): Lexer.Token {
+export function decimalValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   const sign = Lexer.SIGN(value, index);
   if (sign) {
@@ -199,15 +145,9 @@ export function decimalValue(value: SourceArray, index: number): Lexer.Token {
     return;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    end,
-    'Edm.Decimal',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.Decimal', position: start, next: end }, value);
 }
-export function doubleValue(value: SourceArray, index: number): Lexer.Token {
+export function doubleValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   let end = index;
   const nanInfLen = Lexer.nanInfinity(value, index);
@@ -252,22 +192,16 @@ export function doubleValue(value: SourceArray, index: number): Lexer.Token {
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    end,
-    'Edm.Double',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.Double', position: start, next: end }, value);
 }
-export function singleValue(value: SourceArray, index: number): Lexer.Token {
+export function singleValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const token = doubleValue(value, index);
   if (token) {
-    token.value = 'Edm.Single';
+    return { ...token, value: 'Edm.Single' };
   }
   return token;
 }
-export function stringValue(value: SourceArray, index: number): Lexer.Token {
+export function stringValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   // TODO: handle values with double single quote `THeo''Sun A`
   const start = index;
   let squote = Lexer.SQUOTE(value, start);
@@ -313,16 +247,10 @@ export function stringValue(value: SourceArray, index: number): Lexer.Token {
     }
     index = squote;
 
-    return Lexer.tokenize(
-      value,
-      start,
-      index,
-      'Edm.String',
-      Lexer.TokenType.Literal
-    );
+    return Lexer.tokenize({ type: 'Literal', value: 'Edm.String', position: start, next: index }, value);
   }
 }
-export function durationValue(value: SourceArray, index: number): Lexer.Token {
+export function durationValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   if (!Utils.equals(value, index, 'duration')) {
     return;
   }
@@ -406,15 +334,9 @@ export function durationValue(value: SourceArray, index: number): Lexer.Token {
   }
   end = squote;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    end,
-    'Edm.Duration',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.Duration', position: start, next: end }, value);
 }
-export function binaryValue(value: SourceArray, index: number): Lexer.Token {
+export function binaryValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const start = index;
   if (!Utils.equals(value, index, 'binary')) {
     return;
@@ -448,15 +370,9 @@ export function binaryValue(value: SourceArray, index: number): Lexer.Token {
   }
   index = squote;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    'Edm.Binary',
-    Lexer.TokenType.Literal
-  );
-}
-export function dateValue(value: SourceArray, index: number): Lexer.Token {
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.Binary', position: start, next: index }, value);
+};
+export function dateValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const yearNext = Lexer.year(value, index);
   if (yearNext === index || value[yearNext] !== 0x2d) {
     return;
@@ -470,18 +386,12 @@ export function dateValue(value: SourceArray, index: number): Lexer.Token {
   if (dayNext === monthNext + 1 || value[dayNext] === 0x54) {
     return;
   }
-  return Lexer.tokenize(
-    value,
-    index,
-    dayNext,
-    'Edm.Date',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.Date', position: index, next: dayNext }, value);
 }
 export function dateTimeOffsetValue(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   const yearNext = Lexer.year(value, index);
   if (yearNext === index || value[yearNext] !== 0x2d) {
     return;
@@ -525,7 +435,6 @@ export function dateTimeOffsetValue(
       end = secondNext;
     }
   }
-
   const sign = Lexer.SIGN(value, end);
   if (value[end] === 0x5a) {
     end++;
@@ -544,15 +453,9 @@ export function dateTimeOffsetValue(
     return;
   }
 
-  return Lexer.tokenize(
-    value,
-    index,
-    end,
-    'Edm.DateTimeOffset',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.DateTimeOffset', position: index, next: end }, value);
 }
-export function timeOfDayValue(value: SourceArray, index: number): Lexer.Token {
+export function timeOfDayValue(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const hourNext = Lexer.hour(value, index);
   let colon = Lexer.COLON(value, hourNext);
   if (hourNext === index || !colon) {
@@ -584,20 +487,14 @@ export function timeOfDayValue(value: SourceArray, index: number): Lexer.Token {
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    index,
-    end,
-    'Edm.TimeOfDay',
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: 'Edm.TimeOfDay', position: index, next: end }, value);
 }
 
 // geography and geometry literals
 export function positionLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   const longitude = doubleValue(value, index);
   if (!longitude) {
     return;
@@ -613,15 +510,9 @@ export function positionLiteral(
     return;
   }
 
-  return Lexer.tokenize(
-    value,
-    index,
-    latitude.next,
-    { longitude, latitude },
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: { longitude, latitude }, position: index, next: latitude.next }, value);
 }
-export function pointData(value: SourceArray, index: number): Lexer.Token {
+export function pointData(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
     return;
@@ -641,7 +532,7 @@ export function pointData(value: SourceArray, index: number): Lexer.Token {
   }
   index = close;
 
-  return Lexer.tokenize(value, start, index, position, Lexer.TokenType.Literal);
+  return Lexer.tokenize({ type: 'Literal', value: position, position: start, next: index }, value);
 }
 export function lineStringData(value: SourceArray, index: number): Lexer.Token {
   return multiGeoLiteralFactory(value, index, '', positionLiteral);
@@ -684,7 +575,7 @@ export function sridLiteral(value: SourceArray, index: number): Lexer.Token {
 
   return Lexer.tokenize(value, start, index, 'SRID', Lexer.TokenType.Literal);
 }
-export function pointLiteral(value: SourceArray, index: number): Lexer.Token {
+export function pointLiteral(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   if (
     !(
       Utils.equals(value, index, 'Point') ||
@@ -703,7 +594,7 @@ export function pointLiteral(value: SourceArray, index: number): Lexer.Token {
 
   return Lexer.tokenize(value, start, data.next, data, Lexer.TokenType.Literal);
 }
-export function polygonLiteral(value: SourceArray, index: number): Lexer.Token {
+export function polygonLiteral(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   if (
     !(
       Utils.equals(value, index, 'Polygon') ||
@@ -726,13 +617,13 @@ export function polygonLiteral(value: SourceArray, index: number): Lexer.Token {
 export function collectionLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return multiGeoLiteralFactory(value, index, 'Collection', geoLiteral);
 }
 export function lineStringLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   if (!Utils.equals(value, index, 'LineString')) {
     return;
   }
@@ -750,7 +641,7 @@ export function lineStringLiteral(
 export function multiLineStringLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return multiGeoLiteralOptionalFactory(
     value,
     index,
@@ -761,13 +652,13 @@ export function multiLineStringLiteral(
 export function multiPointLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return multiGeoLiteralOptionalFactory(value, index, 'MultiPoint', pointData);
 }
 export function multiPolygonLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return multiGeoLiteralOptionalFactory(
     value,
     index,
@@ -780,7 +671,7 @@ export function multiGeoLiteralFactory(
   index: number,
   prefix: string,
   itemLiteral: Function
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   if (!Utils.equals(value, index, `${prefix}(`)) {
     return;
   }
@@ -816,20 +707,14 @@ export function multiGeoLiteralFactory(
     index = geo.next;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    { items },
-    Lexer.TokenType.Literal
-  );
+  return Lexer.tokenize({ type: 'Literal', value: { items }, position: start, next: index }, value);
 }
 export function multiGeoLiteralOptionalFactory(
   value: SourceArray,
   index: number,
   prefix: string,
   itemLiteral: Function
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   if (!Utils.equals(value, index, `${prefix}(`)) {
     return;
   }
@@ -878,7 +763,7 @@ export function multiGeoLiteralOptionalFactory(
     Lexer.TokenType.Literal
   );
 }
-export function geoLiteral(value: SourceArray, index: number): Lexer.Token {
+export function geoLiteral(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   return (
     collectionLiteral(value, index) ||
     lineStringLiteral(value, index) ||
@@ -892,50 +777,50 @@ export function geoLiteral(value: SourceArray, index: number): Lexer.Token {
 export function fullPointLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, pointLiteral);
 }
 export function fullCollectionLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, collectionLiteral);
 }
 export function fullLineStringLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, lineStringLiteral);
 }
 export function fullMultiLineStringLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, multiLineStringLiteral);
 }
 export function fullMultiPointLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, multiPointLiteral);
 }
 export function fullMultiPolygonLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, multiPolygonLiteral);
 }
 export function fullPolygonLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return fullGeoLiteralFactory(value, index, polygonLiteral);
 }
 export function fullGeoLiteralFactory(
   value: SourceArray,
   index: number,
   literal: Function
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   const srid = sridLiteral(value, index);
   if (!srid) {
     return;
@@ -958,7 +843,7 @@ export function fullGeoLiteralFactory(
 export function geographyCollection(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   const prefix = Lexer.geographyPrefix(value, index);
   if (prefix === index) {
     return;
@@ -995,7 +880,7 @@ export function geographyCollection(
 export function geographyLineString(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1007,7 +892,7 @@ export function geographyLineString(
 export function geographyMultiLineString(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1019,7 +904,7 @@ export function geographyMultiLineString(
 export function geographyMultiPoint(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1031,7 +916,7 @@ export function geographyMultiPoint(
 export function geographyMultiPolygon(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1040,14 +925,14 @@ export function geographyMultiPolygon(
     fullMultiPolygonLiteral
   );
 }
-export function geographyPoint(value: SourceArray, index: number): Lexer.Token {
+export function geographyPoint(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(value, index, 'Edm.GeographyPoint', Lexer.geographyPrefix, fullPointLiteral)
     || geoLiteralFactory(value, index, 'Edm.GeographyPoint', Lexer.geographyPrefix, pointLiteral);
 }
 export function geographyPolygon(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1059,7 +944,7 @@ export function geographyPolygon(
 export function geometryCollection(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1071,7 +956,7 @@ export function geometryCollection(
 export function geometryLineString(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1083,7 +968,7 @@ export function geometryLineString(
 export function geometryMultiLineString(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1095,7 +980,7 @@ export function geometryMultiLineString(
 export function geometryMultiPoint(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1107,7 +992,7 @@ export function geometryMultiPoint(
 export function geometryMultiPolygon(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1116,7 +1001,7 @@ export function geometryMultiPolygon(
     fullMultiPolygonLiteral
   );
 }
-export function geometryPoint(value: SourceArray, index: number): Lexer.Token {
+export function geometryPoint(value: SourceArray, index: number): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1128,7 +1013,7 @@ export function geometryPoint(value: SourceArray, index: number): Lexer.Token {
 export function geometryPolygon(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   return geoLiteralFactory(
     value,
     index,
@@ -1143,7 +1028,7 @@ export function geoLiteralFactory(
   type: string,
   prefix: Function,
   literal: Function
-): Lexer.Token {
+): Lexer.LiteralToken | undefined {
   const prefixNext = prefix(value, index);
   if (prefixNext === index) {
     return;
@@ -1169,13 +1054,13 @@ export function geoLiteralFactory(
   }
   index = squote;
 
-  return Lexer.tokenize(value, start, index, type, Lexer.TokenType.Literal);
+  return Lexer.tokenize({ type: 'Literal', value: type, position: start, next: index }, value);
 }
 
 export function primitiveLiteral(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.LiteralToken | Lexer.EnumToken | undefined {
   return (
     nullValue(value, index) ||
     booleanValue(value, index) ||

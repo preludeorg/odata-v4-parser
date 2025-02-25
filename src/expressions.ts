@@ -33,7 +33,9 @@ export function commonExpr(value: SourceArray, index: number): Lexer.Token {
       left: Lexer.clone(token),
       right: expr.value
     };
-    token.next = expr.value.next;
+    if (typeof expr.value === 'object' && 'next' in expr.value) {
+      token.next = expr.value.next;
+    }
     token.type = expr.type;
     token.raw = Utils.stringify(value, token.position, token.next);
   }
@@ -152,13 +154,7 @@ export function orExpr(value: SourceArray, index: number): Lexer.Token {
     return;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    'OrExpression'
-  );
+  return Lexer.tokenize({ ...token, value: token, type: 'OrExpression' }, value);
 }
 
 export function leftRightExpr(

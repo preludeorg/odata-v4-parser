@@ -8,160 +8,169 @@ type BaseToken = {
   metadata?: any;
 };
 
-type LiteralToken = BaseToken & { type: 'Literal'; value: string };
-type ArrayOrObjectToken = BaseToken & { type: 'ArrayOrObject'; value: object | any[] };
-type ArrayToken = BaseToken & { type: 'Array'; value: any[] };
-type ObjectToken = BaseToken & { type: 'Object'; value: any[] };
-type PropertyToken = BaseToken & { type: 'Property'; value: string };
-type AnnotationToken = BaseToken & { type: 'Annotation'; value: string };
-type EnumToken = BaseToken & { type: 'Enum'; value: string };
-type EnumValueToken = BaseToken & { type: 'EnumValue'; value: string };
-type EnumMemberValueToken = BaseToken & { type: 'EnumMemberValue'; value: string };
-type IdentifierToken = BaseToken & { type: 'Identifier'; value: string };
-type QualifiedEntityTypeNameToken = BaseToken & { type: 'QualifiedEntityTypeName'; value: string };
-type QualifiedComplexTypeNameToken = BaseToken & { type: 'QualifiedComplexTypeName'; value: string };
-type ODataIdentifierToken = BaseToken & { type: 'ODataIdentifier'; value: string };
-type CollectionToken = BaseToken & { type: 'Collection'; value: Token[] };
-type NamespacePartToken = BaseToken & { type: 'NamespacePart'; value: Token[] };
-type EntitySetNameToken = BaseToken & { type: 'EntitySetName'; value: string };
-type SingletonEntityToken = BaseToken & { type: 'SingletonEntity'; value: string };
-type ComplexTypeNameToken = BaseToken & { type: 'ComplexTypeName'; value: string };
-type TypeDefinitionNameToken = BaseToken & { type: 'TypeDefinitionName'; value: string };
-type EnumerationTypeNameToken = BaseToken & { type: 'EnumerationTypeName'; value: string };
-type EnumerationMemberToken = BaseToken & { type: 'EnumerationMember'; value: string };
-type TermNameToken = BaseToken & { type: 'TermName'; value: string };
-type PrimitivePropertyToken = BaseToken & { type: 'PrimitiveProperty'; value: string };
-type PrimitiveKeyPropertyToken = BaseToken & { type: 'PrimitiveKeyProperty'; value: string };
-type PrimitiveNonKeyPropertyToken = BaseToken & { type: 'PrimitiveNonKeyProperty'; value: string };
-type PrimitiveCollectionPropertyToken = BaseToken & { type: 'PrimitiveCollectionProperty'; value: string };
-type ComplexPropertyToken = BaseToken & { type: 'ComplexProperty'; value: string };
-type StreamPropertyToken = BaseToken & { type: 'StreamProperty'; value: string };
-type NavigationPropertyToken = BaseToken & { type: 'NavigationProperty'; value: string };
-type EntityNavigationPropertyToken = BaseToken & { type: 'EntityNavigationProperty'; value: string };
-type EntityCollectionNavigationPropertyToken = BaseToken & { type: 'EntityCollectionNavigationProperty'; value: string };
-type ActionToken = BaseToken & { type: 'Action'; value: string };
-type ActionImportToken = BaseToken & { type: 'ActionImport'; value: string };
-type FunctionToken = BaseToken & { type: 'Function'; value: string };
-type EntityFunctionToken = BaseToken & { type: 'EntityFunction'; value: string };
-type EntityCollectionFunctionToken = BaseToken & { type: 'EntityCollectionFunction'; value: string };
-type ComplexFunctionToken = BaseToken & { type: 'ComplexFunction'; value: string };
-type ComplexCollectionFunctionToken = BaseToken & { type: 'ComplexCollectionFunction'; value: string };
-type PrimitiveFunctionToken = BaseToken & { type: 'PrimitiveFunction'; value: string };
-type PrimitiveCollectionFunctionToken = BaseToken & { type: 'PrimitiveCollectionFunction'; value: string };
-type ComplexCollectionFunctionImportToken = BaseToken & { type: 'ComplexCollectionFunctionImport'; value: string };
-type PrimitiveFunctionImportToken = BaseToken & { type: 'PrimitiveFunctionImport'; value: string };
-type CommonExpressionToken = BaseToken & { type: 'CommonExpression'; value: string };
-type AndExpressionToken = BaseToken & { type: 'AndExpression'; value: { left: Token, right: Token } };
-type OrExpressionToken = BaseToken & { type: 'OrExpression'; value: { left: Token, right: Token } };
-type EqualsExpressionToken = BaseToken & { type: 'EqualsExpression'; value: string };
-type NotEqualsExpressionToken = BaseToken & { type: 'NotEqualsExpression'; value: string };
-type LesserThanExpressionToken = BaseToken & { type: 'LesserThanExpression'; value: string };
-type LesserOrEqualsExpressionToken = BaseToken & { type: 'LesserOrEqualsExpression'; value: string };
-type GreaterThanExpressionToken = BaseToken & { type: 'GreaterThanExpression'; value: string };
-type GreaterOrEqualsExpressionToken = BaseToken & { type: 'GreaterOrEqualsExpression'; value: string };
-type HasExpressionToken = BaseToken & { type: 'HasExpression'; value: string };
-type AddExpressionToken = BaseToken & { type: 'AddExpression'; value: string };
-type SubExpressionToken = BaseToken & { type: 'SubExpression'; value: string };
-type MulExpressionToken = BaseToken & { type: 'MulExpression'; value: string };
-type DivExpressionToken = BaseToken & { type: 'DivExpression'; value: string };
-type ModExpressionToken = BaseToken & { type: 'ModExpression'; value: string };
-type NotExpressionToken = BaseToken & { type: 'NotExpression'; value: string };
-type BoolParenExpressionToken = BaseToken & { type: 'BoolParenExpression'; value: string };
-type ParenExpressionToken = BaseToken & { type: 'ParenExpression'; value: string };
-type MethodCallExpressionToken = BaseToken & { type: 'MethodCallExpression'; value: string };
-type IsOfExpressionToken = BaseToken & { type: 'IsOfExpression'; value: string };
-type CastExpressionToken = BaseToken & { type: 'CastExpression'; value: string };
-type NegateExpressionToken = BaseToken & { type: 'NegateExpression'; value: string };
-type FirstMemberExpressionToken = BaseToken & { type: 'FirstMemberExpression'; value: string };
-type MemberExpressionToken = BaseToken & { type: 'MemberExpression'; value: string };
-type PropertyPathExpressionToken = BaseToken & { type: 'PropertyPathExpression'; value: string };
-type ImplicitVariableExpressionToken = BaseToken & { type: 'ImplicitVariableExpression'; value: string };
-type LambdaVariableToken = BaseToken & { type: 'LambdaVariable'; value: string };
-type LambdaVariableExpressionToken = BaseToken & { type: 'LambdaVariableExpression'; value: string };
-type LambdaPredicateExpressionToken = BaseToken & { type: 'LambdaPredicateExpression'; value: string };
-type AnyExpressionToken = BaseToken & { type: 'AnyExpression'; value: string };
-type AllExpressionToken = BaseToken & { type: 'AllExpression'; value: string };
-type CollectionNavigationExpressionToken = BaseToken & { type: 'CollectionNavigationExpression'; value: string };
-type SimpleKeyToken = BaseToken & { type: 'SimpleKey'; value: string };
-type CompoundKeyToken = BaseToken & { type: 'CompoundKey'; value: string };
-type KeyValuePairToken = BaseToken & { type: 'KeyValuePair'; value: string };
-type KeyPropertyValueToken = BaseToken & { type: 'KeyPropertyValue'; value: string };
-type KeyPropertyAliasToken = BaseToken & { type: 'KeyPropertyAlias'; value: string };
-type SingleNavigationExpressionToken = BaseToken & { type: 'SingleNavigationExpression'; value: string };
-type CollectionPathExpressionToken = BaseToken & { type: 'CollectionPathExpression'; value: string };
-type ComplexPathExpressionToken = BaseToken & { type: 'ComplexPathExpression'; value: string };
-type SinglePathExpressionToken = BaseToken & { type: 'SinglePathExpression'; value: string };
-type FunctionExpressionToken = BaseToken & { type: 'FunctionExpression'; value: string };
-type FunctionExpressionParametersToken = BaseToken & { type: 'FunctionExpressionParameters'; value: string };
-type FunctionExpressionParameterToken = BaseToken & { type: 'FunctionExpressionParameter'; value: string };
-type ParameterNameToken = BaseToken & { type: 'ParameterName'; value: string };
-type ParameterAliasToken = BaseToken & { type: 'ParameterAlias'; value: string };
-type ParameterValueToken = BaseToken & { type: 'ParameterValue'; value: string };
-type CountExpressionToken = BaseToken & { type: 'CountExpression'; value: string };
-type RefExpressionToken = BaseToken & { type: 'RefExpression'; value: string };
-type ValueExpressionToken = BaseToken & { type: 'ValueExpression'; value: string };
-type RootExpressionToken = BaseToken & { type: 'RootExpression'; value: string };
-type QueryOptionsToken = BaseToken & { type: 'QueryOptions'; value: string };
-type CustomQueryOptionToken = BaseToken & { type: 'CustomQueryOption'; value: string };
-type ExpandToken = BaseToken & { type: 'Expand'; value: string };
-type ExpandItemToken = BaseToken & { type: 'ExpandItem'; value: string };
-type ExpandPathToken = BaseToken & { type: 'ExpandPath'; value: string };
-type ExpandCountOptionToken = BaseToken & { type: 'ExpandCountOption'; value: string };
-type ExpandRefOptionToken = BaseToken & { type: 'ExpandRefOption'; value: string };
-type ExpandOptionToken = BaseToken & { type: 'ExpandOption'; value: string };
-type LevelsToken = BaseToken & { type: 'Levels'; value: string };
-type SearchToken = BaseToken & { type: 'Search'; value: string };
-type SearchExpressionToken = BaseToken & { type: 'SearchExpression'; value: string };
-type SearchParenExpressionToken = BaseToken & { type: 'SearchParenExpression'; value: string };
-type SearchNotExpressionToken = BaseToken & { type: 'SearchNotExpression'; value: string };
-type SearchOrExpressionToken = BaseToken & { type: 'SearchOrExpression'; value: string };
-type SearchAndExpressionToken = BaseToken & { type: 'SearchAndExpression'; value: string };
-type SearchTermToken = BaseToken & { type: 'SearchTerm'; value: string };
-type SearchPhraseToken = BaseToken & { type: 'SearchPhrase'; value: string };
-type SearchWordToken = BaseToken & { type: 'SearchWord'; value: string };
-type FilterToken = BaseToken & { type: 'Filter'; value: string };
-type OrderByToken = BaseToken & { type: 'OrderBy'; value: string };
-type OrderByItemToken = BaseToken & { type: 'OrderByItem'; value: string };
-type SkipToken = BaseToken & { type: 'Skip'; value: string };
-type TopToken = BaseToken & { type: 'Top'; value: string };
-type FormatToken = BaseToken & { type: 'Format'; value: string };
-type InlineCountToken = BaseToken & { type: 'InlineCount'; value: string };
-type SelectToken = BaseToken & { type: 'Select'; value: string };
-type SelectItemToken = BaseToken & { type: 'SelectItem'; value: string };
-type SelectPathToken = BaseToken & { type: 'SelectPath'; value: string };
-type AliasAndValueToken = BaseToken & { type: 'AliasAndValue'; value: string };
-type SkipTokenToken = BaseToken & { type: 'SkipToken'; value: string };
-type IdToken = BaseToken & { type: 'Id'; value: string };
-type CrossjoinToken = BaseToken & { type: 'Crossjoin'; value: string };
-type AllResourceToken = BaseToken & { type: 'AllResource'; value: string };
-type ActionImportCallToken = BaseToken & { type: 'ActionImportCall'; value: string };
-type FunctionImportCallToken = BaseToken & { type: 'FunctionImportCall'; value: string };
-type EntityCollectionFunctionImportCallToken = BaseToken & { type: 'EntityCollectionFunctionImportCall'; value: string };
-type EntityFunctionImportCallToken = BaseToken & { type: 'EntityFunctionImportCall'; value: string };
-type ComplexCollectionFunctionImportCallToken = BaseToken & { type: 'ComplexCollectionFunctionImportCall'; value: string };
-type ComplexFunctionImportCallToken = BaseToken & { type: 'ComplexFunctionImportCall'; value: string };
-type PrimitiveCollectionFunctionImportCallToken = BaseToken & { type: 'PrimitiveCollectionFunctionImportCall'; value: string };
-type PrimitiveFunctionImportCallToken = BaseToken & { type: 'PrimitiveFunctionImportCall'; value: string };
-type FunctionParametersToken = BaseToken & { type: 'FunctionParameters'; value: string };
-type FunctionParameterToken = BaseToken & { type: 'FunctionParameter'; value: string };
-type ResourcePathToken = BaseToken & { type: 'ResourcePath'; value: string };
-type CollectionNavigationToken = BaseToken & { type: 'CollectionNavigation'; value: string };
-type CollectionNavigationPathToken = BaseToken & { type: 'CollectionNavigationPath'; value: string };
-type SingleNavigationToken = BaseToken & { type: 'SingleNavigation'; value: string };
-type PropertyPathToken = BaseToken & { type: 'PropertyPath'; value: string };
-type ComplexPathToken = BaseToken & { type: 'ComplexPath'; value: string };
-type BoundOperationToken = BaseToken & { type: 'BoundOperation'; value: string };
-type BoundActionCallToken = BaseToken & { type: 'BoundActionCall'; value: string };
-type BoundEntityFunctionCallToken = BaseToken & { type: 'BoundEntityFunctionCall'; value: string };
-type BoundEntityCollectionFunctionCallToken = BaseToken & { type: 'BoundEntityCollectionFunctionCall'; value: string };
-type BoundComplexFunctionCallToken = BaseToken & { type: 'BoundComplexFunctionCall'; value: string };
-type BoundComplexCollectionFunctionCallToken = BaseToken & { type: 'BoundComplexCollectionFunctionCall'; value: string };
-type BoundPrimitiveFunctionCallToken = BaseToken & { type: 'BoundPrimitiveFunctionCall'; value: string };
-type BoundPrimitiveCollectionFunctionCallToken = BaseToken & { type: 'BoundPrimitiveCollectionFunctionCall'; value: string };
-type ODataUriToken = BaseToken & { type: 'ODataUri'; value: string };
-type BatchToken = BaseToken & { type: 'Batch'; value: string };
-type EntityToken = BaseToken & { type: 'Entity'; value: string };
-type MetadataToken = BaseToken & { type: 'Metadata'; value: string };
+type NamedValue = { name: string };
+type NamespacedNameValue = { name: string; namespace?: string };
+
+export type LiteralToken = BaseToken & { type: 'Literal'; value: string | LiteralToken | { longitude: LiteralToken, latitude: LiteralToken } };
+export type ArrayOrObjectToken = BaseToken & { type: 'ArrayOrObject'; value: object | any[] };
+export type ArrayToken = BaseToken & { type: 'Array'; value: any[] };
+export type ObjectToken = BaseToken & { type: 'Object'; value: any[] };
+export type PropertyToken = BaseToken & { type: 'Property'; value: string };
+export type AnnotationToken = BaseToken & { type: 'Annotation'; value: string };
+export type EnumToken = BaseToken & { type: 'Enum'; value: { name: IdentifierToken; value: EnumValueToken } };
+export type EnumValueToken = BaseToken & { type: 'EnumValue'; value: { values: (EnumerationMemberToken | EnumMemberValueToken)[]} };
+export type EnumMemberValueToken = BaseToken & { type: 'EnumMemberValue'; value: string };
+export type IdentifierToken = BaseToken & { type: 'Identifier'; value: string };
+export type QualifiedEntityTypeNameToken = BaseToken & { type: 'QualifiedEntityTypeName'; value: EntityTypeNameToken };
+export type QualifiedComplexTypeNameToken = BaseToken & { type: 'QualifiedComplexTypeName'; value: ComplexTypeNameToken };
+export type ODataIdentifierToken = BaseToken & { type: 'ODataIdentifier'; value: NamedValue };
+export type CollectionToken = BaseToken & { type: 'Collection'; value: Token[] };
+export type NamespacePartToken = BaseToken & { type: 'NamespacePart'; value: NamedValue | Token[] };
+export type EntitySetNameToken = BaseToken & { type: 'EntitySetName'; value: NamedValue };
+export type SingletonEntityToken = BaseToken & { type: 'SingletonEntity'; value: NamedValue };
+export type EntityTypeNameToken = BaseToken & { type: 'EntityTypeName'; value: NamespacedNameValue };
+export type ComplexTypeNameToken = BaseToken & { type: 'ComplexTypeName'; value: NamespacedNameValue };
+export type TypeDefinitionNameToken = BaseToken & { type: 'TypeDefinitionName'; value: NamedValue };
+export type EnumerationTypeNameToken = BaseToken & { type: 'EnumerationTypeName'; value: NamedValue };
+export type EnumerationMemberToken = BaseToken & { type: 'EnumerationMember'; value: NamedValue };
+export type TermNameToken = BaseToken & { type: 'TermName'; value: NamedValue };
+export type PrimitivePropertyToken = BaseToken & { type: 'PrimitiveProperty'; value: NamedValue };
+export type PrimitiveKeyPropertyToken = BaseToken & { type: 'PrimitiveKeyProperty'; value: string };
+export type PrimitiveNonKeyPropertyToken = BaseToken & { type: 'PrimitiveNonKeyProperty'; value: string };
+export type PrimitiveCollectionPropertyToken = BaseToken & { type: 'PrimitiveCollectionProperty'; value: NamedValue };
+export type ComplexPropertyToken = BaseToken & { type: 'ComplexProperty'; value: NamedValue };
+export type ComplexCollectionPropertyToken = BaseToken & { type: 'ComplexCollectionProperty'; value: NamedValue };
+export type StreamPropertyToken = BaseToken & { type: 'StreamProperty'; value: NamedValue };
+export type NavigationPropertyToken = BaseToken & { type: 'NavigationProperty'; value: string };
+export type EntityNavigationPropertyToken = BaseToken & { type: 'EntityNavigationProperty'; value: NamedValue };
+export type EntityCollectionNavigationPropertyToken = BaseToken & { type: 'EntityCollectionNavigationProperty'; value: NamedValue };
+export type ActionToken = BaseToken & { type: 'Action'; value: NamedValue };
+export type ActionImportToken = BaseToken & { type: 'ActionImport'; value: NamedValue };
+export type FunctionToken = BaseToken & { type: 'Function'; value: string };
+export type EntityFunctionToken = BaseToken & { type: 'EntityFunction'; value: NamedValue };
+export type EntityCollectionFunctionToken = BaseToken & { type: 'EntityCollectionFunction'; value: NamedValue };
+export type ComplexFunctionToken = BaseToken & { type: 'ComplexFunction'; value: NamedValue };
+export type ComplexCollectionFunctionToken = BaseToken & { type: 'ComplexCollectionFunction'; value: NamedValue };
+export type PrimitiveFunctionToken = BaseToken & { type: 'PrimitiveFunction'; value: NamedValue };
+export type PrimitiveCollectionFunctionToken = BaseToken & { type: 'PrimitiveCollectionFunction'; value: NamedValue };
+export type EntityFunctionImportToken = BaseToken & { type: 'EntityFunctionImport'; value: NamedValue };
+export type EntityCollectionFunctionImportToken = BaseToken & { type: 'EntityCollectionFunctionImport'; value: NamedValue };
+export type ComplexFunctionImportToken = BaseToken & { type: 'ComplexFunctionImport'; value: NamedValue };
+export type ComplexCollectionFunctionImportToken = BaseToken & { type: 'ComplexCollectionFunctionImport'; value: NamedValue };
+export type PrimitiveFunctionImportToken = BaseToken & { type: 'PrimitiveFunctionImport'; value: NamedValue };
+export type PrimitiveCollectionFunctionImportToken = BaseToken & { type: 'PrimitiveCollectionFunctionImport'; value: NamedValue };
+export type CommonExpressionToken = BaseToken & { type: 'CommonExpression'; value: Token };
+export type AndExpressionToken = BaseToken & { type: 'AndExpression'; value: { left: Token, right: Token } };
+export type OrExpressionToken = BaseToken & { type: 'OrExpression'; value: { left: Token, right: Token } };
+export type EqualsExpressionToken = BaseToken & { type: 'EqualsExpression'; value: string };
+export type NotEqualsExpressionToken = BaseToken & { type: 'NotEqualsExpression'; value: string };
+export type LesserThanExpressionToken = BaseToken & { type: 'LesserThanExpression'; value: string };
+export type LesserOrEqualsExpressionToken = BaseToken & { type: 'LesserOrEqualsExpression'; value: string };
+export type GreaterThanExpressionToken = BaseToken & { type: 'GreaterThanExpression'; value: string };
+export type GreaterOrEqualsExpressionToken = BaseToken & { type: 'GreaterOrEqualsExpression'; value: string };
+export type HasExpressionToken = BaseToken & { type: 'HasExpression'; value: string };
+export type AddExpressionToken = BaseToken & { type: 'AddExpression'; value: string };
+export type SubExpressionToken = BaseToken & { type: 'SubExpression'; value: string };
+export type MulExpressionToken = BaseToken & { type: 'MulExpression'; value: string };
+export type DivExpressionToken = BaseToken & { type: 'DivExpression'; value: string };
+export type ModExpressionToken = BaseToken & { type: 'ModExpression'; value: string };
+export type NotExpressionToken = BaseToken & { type: 'NotExpression'; value: string };
+export type BoolParenExpressionToken = BaseToken & { type: 'BoolParenExpression'; value: string };
+export type ParenExpressionToken = BaseToken & { type: 'ParenExpression'; value: string };
+export type MethodCallExpressionToken = BaseToken & { type: 'MethodCallExpression'; value: { method: string; parameters: Token[] } };
+export type IsOfExpressionToken = BaseToken & { type: 'IsOfExpression'; value: string };
+export type CastExpressionToken = BaseToken & { type: 'CastExpression'; value: string };
+export type NegateExpressionToken = BaseToken & { type: 'NegateExpression'; value: string };
+export type FirstMemberExpressionToken = BaseToken & { type: 'FirstMemberExpression'; value: string };
+export type MemberExpressionToken = BaseToken & { type: 'MemberExpression'; value: string };
+export type PropertyPathExpressionToken = BaseToken & { type: 'PropertyPathExpression'; value: string };
+export type ImplicitVariableExpressionToken = BaseToken & { type: 'ImplicitVariableExpression'; value: string };
+export type LambdaVariableToken = BaseToken & { type: 'LambdaVariable'; value: string };
+export type LambdaVariableExpressionToken = BaseToken & { type: 'LambdaVariableExpression'; value: string };
+export type LambdaPredicateExpressionToken = BaseToken & { type: 'LambdaPredicateExpression'; value: string };
+export type AnyExpressionToken = BaseToken & { type: 'AnyExpression'; value: string };
+export type AllExpressionToken = BaseToken & { type: 'AllExpression'; value: string };
+export type CollectionNavigationExpressionToken = BaseToken & { type: 'CollectionNavigationExpression'; value: string };
+export type SimpleKeyToken = BaseToken & { type: 'SimpleKey'; value: string };
+export type CompoundKeyToken = BaseToken & { type: 'CompoundKey'; value: string };
+export type KeyValuePairToken = BaseToken & { type: 'KeyValuePair'; value: string };
+export type KeyPropertyValueToken = BaseToken & { type: 'KeyPropertyValue'; value: string };
+export type KeyPropertyAliasToken = BaseToken & { type: 'KeyPropertyAlias'; value: string };
+export type SingleNavigationExpressionToken = BaseToken & { type: 'SingleNavigationExpression'; value: string };
+export type CollectionPathExpressionToken = BaseToken & { type: 'CollectionPathExpression'; value: string };
+export type ComplexPathExpressionToken = BaseToken & { type: 'ComplexPathExpression'; value: string };
+export type SinglePathExpressionToken = BaseToken & { type: 'SinglePathExpression'; value: string };
+export type FunctionExpressionToken = BaseToken & { type: 'FunctionExpression'; value: string };
+export type FunctionExpressionParametersToken = BaseToken & { type: 'FunctionExpressionParameters'; value: string };
+export type FunctionExpressionParameterToken = BaseToken & { type: 'FunctionExpressionParameter'; value: string };
+export type ParameterNameToken = BaseToken & { type: 'ParameterName'; value: string };
+export type ParameterAliasToken = BaseToken & { type: 'ParameterAlias'; value: string };
+export type ParameterValueToken = BaseToken & { type: 'ParameterValue'; value: string };
+export type CountExpressionToken = BaseToken & { type: 'CountExpression'; value: string };
+export type RefExpressionToken = BaseToken & { type: 'RefExpression'; value: string };
+export type ValueExpressionToken = BaseToken & { type: 'ValueExpression'; value: string };
+export type RootExpressionToken = BaseToken & { type: 'RootExpression'; value: string };
+export type QueryOptionsToken = BaseToken & { type: 'QueryOptions'; value: string };
+export type CustomQueryOptionToken = BaseToken & { type: 'CustomQueryOption'; value: { key: string; value: string } };
+export type ExpandToken = BaseToken & { type: 'Expand'; value: string };
+export type ExpandItemToken = BaseToken & { type: 'ExpandItem'; value: string };
+export type ExpandPathToken = BaseToken & { type: 'ExpandPath'; value: string };
+export type ExpandCountOptionToken = BaseToken & { type: 'ExpandCountOption'; value: string };
+export type ExpandRefOptionToken = BaseToken & { type: 'ExpandRefOption'; value: string };
+export type ExpandOptionToken = BaseToken & { type: 'ExpandOption'; value: string };
+export type LevelsToken = BaseToken & { type: 'Levels'; value: string };
+export type SearchToken = BaseToken & { type: 'Search'; value: string };
+export type SearchExpressionToken = BaseToken & { type: 'SearchExpression'; value: string };
+export type SearchParenExpressionToken = BaseToken & { type: 'SearchParenExpression'; value: string };
+export type SearchNotExpressionToken = BaseToken & { type: 'SearchNotExpression'; value: string };
+export type SearchOrExpressionToken = BaseToken & { type: 'SearchOrExpression'; value: string };
+export type SearchAndExpressionToken = BaseToken & { type: 'SearchAndExpression'; value: string };
+export type SearchTermToken = BaseToken & { type: 'SearchTerm'; value: string };
+export type SearchPhraseToken = BaseToken & { type: 'SearchPhrase'; value: string };
+export type SearchWordToken = BaseToken & { type: 'SearchWord'; value: string };
+export type FilterToken = BaseToken & { type: 'Filter'; value: string };
+export type OrderByToken = BaseToken & { type: 'OrderBy'; value: string };
+export type OrderByItemToken = BaseToken & { type: 'OrderByItem'; value: string };
+export type SkipToken = BaseToken & { type: 'Skip'; value: string };
+export type TopToken = BaseToken & { type: 'Top'; value: string };
+export type FormatToken = BaseToken & { type: 'Format'; value: string };
+export type InlineCountToken = BaseToken & { type: 'InlineCount'; value: string };
+export type SelectToken = BaseToken & { type: 'Select'; value: string };
+export type SelectItemToken = BaseToken & { type: 'SelectItem'; value: string };
+export type SelectPathToken = BaseToken & { type: 'SelectPath'; value: string };
+export type AliasAndValueToken = BaseToken & { type: 'AliasAndValue'; value: string };
+export type SkipTokenToken = BaseToken & { type: 'SkipToken'; value: string };
+export type IdToken = BaseToken & { type: 'Id'; value: string };
+export type CrossjoinToken = BaseToken & { type: 'Crossjoin'; value: string };
+export type AllResourceToken = BaseToken & { type: 'AllResource'; value: string };
+export type ActionImportCallToken = BaseToken & { type: 'ActionImportCall'; value: string };
+export type FunctionImportCallToken = BaseToken & { type: 'FunctionImportCall'; value: string };
+export type EntityCollectionFunctionImportCallToken = BaseToken & { type: 'EntityCollectionFunctionImportCall'; value: string };
+export type EntityFunctionImportCallToken = BaseToken & { type: 'EntityFunctionImportCall'; value: string };
+export type ComplexCollectionFunctionImportCallToken = BaseToken & { type: 'ComplexCollectionFunctionImportCall'; value: string };
+export type ComplexFunctionImportCallToken = BaseToken & { type: 'ComplexFunctionImportCall'; value: string };
+export type PrimitiveCollectionFunctionImportCallToken = BaseToken & { type: 'PrimitiveCollectionFunctionImportCall'; value: string };
+export type PrimitiveFunctionImportCallToken = BaseToken & { type: 'PrimitiveFunctionImportCall'; value: string };
+export type FunctionParametersToken = BaseToken & { type: 'FunctionParameters'; value: string };
+export type FunctionParameterToken = BaseToken & { type: 'FunctionParameter'; value: string };
+export type ResourcePathToken = BaseToken & { type: 'ResourcePath'; value: string };
+export type CollectionNavigationToken = BaseToken & { type: 'CollectionNavigation'; value: string };
+export type CollectionNavigationPathToken = BaseToken & { type: 'CollectionNavigationPath'; value: string };
+export type SingleNavigationToken = BaseToken & { type: 'SingleNavigation'; value: string };
+export type PropertyPathToken = BaseToken & { type: 'PropertyPath'; value: string };
+export type ComplexPathToken = BaseToken & { type: 'ComplexPath'; value: string };
+export type BoundOperationToken = BaseToken & { type: 'BoundOperation'; value: string };
+export type BoundActionCallToken = BaseToken & { type: 'BoundActionCall'; value: string };
+export type BoundEntityFunctionCallToken = BaseToken & { type: 'BoundEntityFunctionCall'; value: string };
+export type BoundEntityCollectionFunctionCallToken = BaseToken & { type: 'BoundEntityCollectionFunctionCall'; value: string };
+export type BoundComplexFunctionCallToken = BaseToken & { type: 'BoundComplexFunctionCall'; value: string };
+export type BoundComplexCollectionFunctionCallToken = BaseToken & { type: 'BoundComplexCollectionFunctionCall'; value: string };
+export type BoundPrimitiveFunctionCallToken = BaseToken & { type: 'BoundPrimitiveFunctionCall'; value: string };
+export type BoundPrimitiveCollectionFunctionCallToken = BaseToken & { type: 'BoundPrimitiveCollectionFunctionCall'; value: string };
+export type ODataUriToken = BaseToken & { type: 'ODataUri'; value: string };
+export type BatchToken = BaseToken & { type: 'Batch'; value: string };
+export type EntityToken = BaseToken & { type: 'Entity'; value: string };
+export type MetadataToken = BaseToken & { type: 'Metadata'; value: string };
 
 export type Token =
   | LiteralToken
@@ -182,6 +191,7 @@ export type Token =
   | NamespacePartToken
   | EntitySetNameToken
   | SingletonEntityToken
+  | EntityTypeNameToken
   | ComplexTypeNameToken
   | TypeDefinitionNameToken
   | EnumerationTypeNameToken
@@ -192,6 +202,7 @@ export type Token =
   | PrimitiveNonKeyPropertyToken
   | PrimitiveCollectionPropertyToken
   | ComplexPropertyToken
+  | ComplexCollectionPropertyToken
   | StreamPropertyToken
   | NavigationPropertyToken
   | EntityNavigationPropertyToken
@@ -205,8 +216,12 @@ export type Token =
   | ComplexCollectionFunctionToken
   | PrimitiveFunctionToken
   | PrimitiveCollectionFunctionToken
+  | EntityFunctionImportToken
+  | EntityCollectionFunctionImportToken
+  | ComplexFunctionImportToken
   | ComplexCollectionFunctionImportToken
   | PrimitiveFunctionImportToken
+  | PrimitiveCollectionFunctionImportToken
   | CommonExpressionToken
   | AndExpressionToken
   | OrExpressionToken
@@ -324,15 +339,15 @@ export type TokenType = Token['type'];
 
 export type LexerToken = Token;
 
-type PartialToken = {
+export type PartialToken = {
   [P in Token['type']]: Pick<Extract<Token, { type: P }>, 'type' | 'value' | 'position' | 'next'>;
 }[Token['type']];
 
-export function tokenize(
-  token: PartialToken,
+export function tokenize<T extends TokenType>(
+  token: PartialToken & { type: T },
   source: SourceArray,
   metadataContextContainer?: Token
-): Token {
+): Token & { type: T } {
   const raw = Utils.stringify(source, token.position, token.next);
   const metadata = metadataContextContainer?.metadata;
   return { ...token, raw, metadata };

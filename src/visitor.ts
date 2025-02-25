@@ -75,9 +75,11 @@ export function traverseAstDeepFirst(
   node: Token,
   parent?: Token
 ): void {
-  if (isArray(node?.value) || isPlainObject(node?.value)) {
-    forEach(node?.value, (item) => {
-      if (item instanceof Token) {
+  const value = node?.value;
+
+  if (isArray(value) || isPlainObject(value)) {
+    forEach(value, (item) => {
+      if (typeof item.type === 'string') {
         traverseAstDeepFirst(traverser, item, node);
       }
     });

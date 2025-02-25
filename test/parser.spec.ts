@@ -1,6 +1,5 @@
-import { defaultParser, TokenType } from '../src';
+import { defaultParser } from '../src';
 import { Parser } from '../src/parser';
-import { isType } from '../src/utils';
 
 describe('Parser', () => {
 
@@ -50,14 +49,16 @@ describe('Parser', () => {
     expect(ast.value.options[0].type).toBe(TokenType.CustomQueryOption);
     expect(ast.value.options[1].type).toBe(TokenType.CustomQueryOption);
 
-    if (isType(ast.value.options[0],TokenType.CustomQueryOption)) {
-      expect(ast.value.options[0].value.key).toEqual('foo');
-      expect(ast.value.options[0].value.value).toEqual('123');
+    const opt1 = ast.value.options[0];
+    if (opt1.type === 'CustomQueryOption') {
+      expect(opt1.value.key).toEqual('foo');
+      expect(opt1.value.value).toEqual('123');
     }
 
-    if (isType(ast.value.options[1],TokenType.CustomQueryOption)) {
-      expect(ast.value.options[1].value.key).toEqual('bar');
-      expect(ast.value.options[1].value.value).toEqual('foobar');
+    const opt2 = ast.value.options[1];
+    if (opt2.type === 'CustomQueryOption') {
+      expect(opt2.value.key).toEqual('bar');
+      expect(opt2.value.value).toEqual('foobar');
     }
   });
 
