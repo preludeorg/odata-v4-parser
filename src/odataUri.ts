@@ -1,20 +1,20 @@
-import * as Lexer from './lexer';
 import * as Query from './query';
 import * as ResourcePath from './resourcePath';
+import * as Token from './token';
 import { SourceArray } from './utils';
 
 export function odataUri(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.ODataUriToken | undefined {
   let resource = ResourcePath.resourcePath(value, index, metadataContext);
   while (!resource && index < value.length) {
     while (value[++index] !== 0x2f && index < value.length) {}
     resource = ResourcePath.resourcePath(value, index, metadataContext);
   }
   if (!resource) {
-    return;
+    return undefined;
   }
   const start = index;
   index = resource.next;
@@ -24,18 +24,11 @@ export function odataUri(
   if (value[index] === 0x3f) {
     query = Query.queryOptions(value, index + 1, metadataContext);
     if (!query) {
-      return;
+      return undefined;
     }
     index = query.next;
     delete resource.metadata;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    { resource, query },
-    Lexer.TokenType.ODataUri,
-    <any>{ metadata: metadataContext }
-  );
+  return Token.tokenize({ type: 'ODataUri', value: { resource, query }, position: start, next: index, source: value, metadata: metadataContext });
 }

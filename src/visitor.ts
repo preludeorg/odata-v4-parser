@@ -1,7 +1,7 @@
 import { forEach } from '@newdash/newdash/forEach';
 import { isArray } from '@newdash/newdash/isArray';
 import { isPlainObject } from '@newdash/newdash/isPlainObject';
-import { Token, TokenType } from './lexer';
+import { Token, TokenType } from './token';
 
 /**
  * AST Traverser
@@ -77,9 +77,9 @@ export function traverseAstDeepFirst(
 ): void {
   const value = node?.value;
 
-  if (isArray(value) || isPlainObject(value)) {
-    forEach(value, (item) => {
-      if (typeof item.type === 'string') {
+  if (isArray(node?.value) || isPlainObject(node?.value)) {
+    forEach(node?.value, (item) => {
+      if (item instanceof Token) {
         traverseAstDeepFirst(traverser, item, node);
       }
     });

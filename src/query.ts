@@ -2,30 +2,31 @@ import * as Expressions from './expressions';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import * as PrimitiveLiteral from './primitiveLiteral';
-import Utils, { SourceArray } from './utils';
+import * as Token from './token';
+import Utils, { isType, SourceArray } from './utils';
 
 export function queryOptions(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.QueryOptionsToken | undefined {
   if (value.length <= index) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index,
-      { options: null },
-      Lexer.TokenType.QueryOptions
-    );
+    return Token.tokenize({
+      type: 'QueryOptions',
+      value: { options: [] },
+      position: index,
+      next: index,
+      source: value
+    });
   }
   let token = queryOption(value, index, metadataContext);
   if (!token) {
-    return;
+    return undefined;
   }
   const start = index;
   index = token.next;
 
-  const options = [];
+  const options: Token.QueryOption[] = [];
   while (token) {
     options.push(token);
     // &
@@ -36,25 +37,19 @@ export function queryOptions(
 
     token = queryOption(value, index, metadataContext);
     if (!token) {
-      return;
+      return undefined;
     }
     index = token.next;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    { options },
-    Lexer.TokenType.QueryOptions
-  );
+  return Token.tokenize({ type: 'QueryOptions', value: { options }, position: start, next: index, source: value });
 }
 
 export function queryOption(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.QueryOption | undefined {
   return (
     systemQueryOption(value, index, metadataContext) ||
     aliasAndValue(value, index) ||
@@ -66,7 +61,7 @@ export function systemQueryOption(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.SystemQueryOption | undefined {
   return (
     expand(value, index, metadataContext) ||
     filter(value, index) ||
@@ -85,17 +80,17 @@ export function systemQueryOption(
 export function customQueryOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.CustomQueryOptionToken | undefined {
   const key = NameOrIdentifier.odataIdentifier(value, index);
   if (!key) {
-    return;
+    return undefined;
   }
   const start = index;
   index = key.next;
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
@@ -103,34 +98,31 @@ export function customQueryOption(
     index++;
   }
   if (index === eq) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      key: key.raw,
-      value: Utils.stringify(value, eq, index)
-    },
-    Lexer.TokenType.CustomQueryOption
-  );
+  return Token.tokenize({
+    type: 'CustomQueryOption',
+    value: { key: key.raw, value: Utils.stringify(value, eq, index) },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function id(value: SourceArray, index: number): Lexer.Token {
+export function id(value: SourceArray, index: number): Token.IdToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24id')) {
     index += 5;
   } else if (Utils.equals(value, index, '$id')) {
     index += 3;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
@@ -138,42 +130,42 @@ export function id(value: SourceArray, index: number): Lexer.Token {
     index++;
   }
   if (index === eq) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    Utils.stringify(value, eq, index),
-    Lexer.TokenType.Id
-  );
+  return Token.tokenize({
+    type: 'Id',
+    value: Utils.stringify(value, eq, index),
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
 export function expand(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.ExpandToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24expand')) {
     index += 9;
   } else if (Utils.equals(value, index, '$expand')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const items = [];
   let token = expandItem(value, index, metadataContext);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
@@ -185,7 +177,7 @@ export function expand(
       index = comma;
       token = expandItem(value, index, metadataContext);
       if (!token) {
-        return;
+        return undefined;
       }
       index = token.next;
     } else {
@@ -193,68 +185,74 @@ export function expand(
     }
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Expand);
+  return Token.tokenize({
+    type: 'Expand',
+    value: { items },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
 export function expandItem(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.ExpandItemToken | undefined {
   const start = index;
   const star = Lexer.STAR(value, index);
   if (star) {
     index = star;
 
     if (index == value.length) {
-      return Lexer.tokenize(
-        value,
-        start,
-        index,
-        { path: '*' },
-        Lexer.TokenType.ExpandItem
-      );
+      return Token.tokenize({
+        type: 'ExpandItem',
+        value: { path: '*' },
+        position: start,
+        next: index,
+        source: value
+      });
     }
 
     const ref = Expressions.refExpr(value, index);
     if (ref) {
       index = ref.next;
-      return Lexer.tokenize(
-        value,
-        start,
-        index,
-        { path: '*', ref },
-        Lexer.TokenType.ExpandItem
-      );
+      return Token.tokenize({
+        type: 'ExpandItem',
+        value: { path: '*', ref },
+        position: start,
+        next: index,
+        source: value
+      });
     }
     const open = Lexer.OPEN(value, index);
     if (open) {
       index = open;
       const token = levels(value, index);
       if (!token) {
-        return;
+        return undefined;
       }
       index = token.next;
 
       const close = Lexer.CLOSE(value, index);
       if (!close) {
-        return;
+        return undefined;
       }
       index = close;
 
-      return Lexer.tokenize(
-        value,
-        start,
-        index,
-        { path: '*', levels: token },
-        Lexer.TokenType.ExpandItem
-      );
+      return Token.tokenize({
+        type: 'ExpandItem',
+        value: { path: '*', levels: token },
+        position: start,
+        next: index,
+        source: value
+      });
     }
   }
 
   const path = expandPath(value, index, metadataContext);
   if (!path) {
-    return;
+    return undefined;
   }
   index = path.next;
 
@@ -271,7 +269,7 @@ export function expandItem(
 
       let option = expandRefOption(value, index);
       if (!option) {
-        return;
+        return undefined;
       }
 
       const refOptions = [];
@@ -285,7 +283,7 @@ export function expandItem(
 
           option = expandRefOption(value, index);
           if (!option) {
-            return;
+            return undefined;
           }
         } else {
           break;
@@ -294,7 +292,7 @@ export function expandItem(
 
       const close = Lexer.CLOSE(value, index);
       if (!close) {
-        return;
+        return undefined;
       }
       index = close;
 
@@ -312,7 +310,7 @@ export function expandItem(
 
         let option = expandCountOption(value, index);
         if (!option) {
-          return;
+          return undefined;
         }
 
         const countOptions = [];
@@ -326,7 +324,7 @@ export function expandItem(
 
             option = expandCountOption(value, index);
             if (!option) {
-              return;
+              return undefined;
             }
           } else {
             break;
@@ -335,7 +333,7 @@ export function expandItem(
 
         const close = Lexer.CLOSE(value, index);
         if (!close) {
-          return;
+          return undefined;
         }
         index = close;
         tokenValue.options = countOptions;
@@ -347,7 +345,7 @@ export function expandItem(
 
         let option = expandOption(value, index);
         if (!option) {
-          return;
+          return undefined;
         }
 
         const options = [];
@@ -361,7 +359,7 @@ export function expandItem(
 
             option = expandOption(value, index);
             if (!option) {
-              return;
+              return undefined;
             }
           } else {
             break;
@@ -370,7 +368,7 @@ export function expandItem(
 
         const close = Lexer.CLOSE(value, index);
         if (!close) {
-          return;
+          return undefined;
         }
         index = close;
         tokenValue.options = options;
@@ -378,26 +376,26 @@ export function expandItem(
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    tokenValue,
-    Lexer.TokenType.ExpandItem
-  );
+  return Token.tokenize({
+    type: 'ExpandItem',
+    value: tokenValue,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
 export function expandCountOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.FilterToken | Token.SearchToken | undefined {
   return filter(value, index) || search(value, index);
 }
 
 export function expandRefOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ExpandRef | undefined {
   return (
     expandCountOption(value, index) ||
     orderby(value, index) ||
@@ -407,7 +405,7 @@ export function expandRefOption(
   );
 }
 
-export function expandOption(value: SourceArray, index: number): Lexer.Token {
+export function expandOption(value: SourceArray, index: number): Token.ExpandRef | Token.SelectToken | Token.ExpandToken | Token.LevelsToken | undefined {
   return (
     expandRefOption(value, index) ||
     select(value, index) ||
@@ -420,9 +418,9 @@ export function expandPath(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.ExpandPathToken | undefined {
   const start = index;
-  const path = [];
+  const path: Token.ExpandPathToken['value'] = [];
 
   const token =
     NameOrIdentifier.qualifiedEntityTypeName(value, index, metadataContext) ||
@@ -432,7 +430,7 @@ export function expandPath(
     index = token.next;
     path.push(token);
     if (value[index] !== 0x2f) {
-      return;
+      return undefined;
     }
     index++;
     metadataContext = token.value.metadata;
@@ -476,7 +474,7 @@ export function expandPath(
   );
 
   if (!nav) {
-    return;
+    return undefined;
   }
   index = nav.next;
   path.push(nav);
@@ -497,39 +495,51 @@ export function expandPath(
     }
   }
 
-  return Lexer.tokenize(value, start, index, path, Lexer.TokenType.ExpandPath);
+  return Token.tokenize({
+    type: 'ExpandPath',
+    value: path,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function search(value: SourceArray, index: number): Lexer.Token {
+export function search(value: SourceArray, index: number): Token.SearchToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24search')) {
     index += 9;
   } else if (Utils.equals(value, index, '$search')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const expr = searchExpr(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
   index = expr.next;
 
-  return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Search);
+  return Token.tokenize({
+    type: 'Search',
+    value: expr,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function searchExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchExpr(value: SourceArray, index: number): Token.SearchPhraseToken | Token.SearchWordToken | Token.SearchNotExpressionToken | Token.SearchParenExpressionToken | undefined {
   const token = searchParenExpr(value, index) || searchTerm(value, index);
 
   if (!token) {
-    return;
+    return undefined;
   }
   const start = index;
   index = token.next;
@@ -537,29 +547,27 @@ export function searchExpr(value: SourceArray, index: number): Lexer.Token {
   const expr = searchAndExpr(value, index) || searchOrExpr(value, index);
 
   if (expr) {
-    const left = Lexer.clone(token);
-    token.next = expr.value.next;
-    token.value = {
-      left,
-      right: expr.value
-    };
-    token.type = expr.type;
-    token.raw = Utils.stringify(value, token.position, token.next);
+    const left = Token.clone(token);
+    const newToken = new Token.Token({
+      ...token,
+      type: expr.type,
+      value: { left, right: expr.value },
+      next: expr.value.next,
+      raw: Utils.stringify(value, token.position, token.next)
+    });
 
     if (
-      token.type === Lexer.TokenType.SearchAndExpression &&
-      token.value.right.type === Lexer.TokenType.SearchOrExpression
+      isType(newToken, 'SearchAndExpression')
+      // && isType(newToken.value.right.type, 'SearchOrExpression')
     ) {
-      token.value.left = Lexer.tokenize(
-        value,
-        token.value.left.position,
-        token.value.right.value.left.next,
-        {
-          left: token.value.left,
-          right: token.value.right.value.left
-        },
-        token.type
-      );
+      console.log(newToken.type);
+      newToken.value.left = Token.tokenize({
+        type: newToken.type,
+        value: { left: newToken.value.left, right: newToken.value.right.value.left },
+        position: newToken.value.left.position,
+        next: newToken.value.right.value.left.next,
+        source: value,
+      });
       token.type = token.value.right.type;
       token.value.right = token.value.right.value.right;
     }
@@ -568,7 +576,7 @@ export function searchExpr(value: SourceArray, index: number): Lexer.Token {
   return token;
 }
 
-export function searchTerm(value: SourceArray, index: number): Lexer.Token {
+export function searchTerm(value: SourceArray, index: number): Token.SearchNotExpressionToken | Token.SearchPhraseToken | Token.SearchWordToken | undefined {
   return (
     searchNotExpr(value, index) ||
     searchPhrase(value, index) ||
@@ -576,91 +584,91 @@ export function searchTerm(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function searchNotExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchNotExpr(value: SourceArray, index: number): Token.SearchNotExpressionToken | undefined {
   let rws = Lexer.RWS(value, index);
   if (!Utils.equals(value, rws, 'NOT')) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws + 3;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const expr = searchPhrase(value, index) || searchWord(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
   index = expr.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    expr,
-    Lexer.TokenType.SearchNotExpression
-  );
+  return Token.tokenize({
+    type: 'SearchNotExpression',
+    value: expr,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function searchOrExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchOrExpr(value: SourceArray, index: number): Token.SearchOrExpressionToken | undefined {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'OR')) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws + 2;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = searchExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    Lexer.TokenType.SearchOrExpression
-  );
+  return Token.tokenize({
+    type: 'SearchOrExpression',
+    value: token,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function searchAndExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchAndExpr(value: SourceArray, index: number): Token.SearchAndExpressionToken | undefined {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'AND')) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws + 3;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = searchExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    Lexer.TokenType.SearchAndExpression
-  );
+  return Token.tokenize({
+    type: 'SearchAndExpression',
+    value: token,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function searchPhrase(value: SourceArray, index: number): Lexer.Token {
+export function searchPhrase(value: SourceArray, index: number): Token.SearchPhraseToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
@@ -679,34 +687,34 @@ export function searchPhrase(value: SourceArray, index: number): Lexer.Token {
 
   mark = Lexer.quotationMark(value, index);
   if (!mark) {
-    return;
+    return undefined;
   }
   index = mark;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    Utils.stringify(value, valueStart, valueEnd),
-    Lexer.TokenType.SearchPhrase
-  );
+  return Token.tokenize({
+    type: 'SearchPhrase',
+    value: Utils.stringify(value, valueStart, valueEnd),
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function searchWord(value: SourceArray, index: number): Lexer.Token {
+export function searchWord(value: SourceArray, index: number): Token.SearchWordToken | undefined {
   const next = Utils.required(value, index, Lexer.ALPHA, 1);
   if (!next) {
-    return;
+    return undefined;
   }
   const start = index;
   index = next;
 
-  const token = Lexer.tokenize(
-    value,
-    start,
-    index,
-    null,
-    Lexer.TokenType.SearchWord
-  );
+  const token = Token.tokenize({
+    type: 'SearchWord',
+    value: '',
+    position: start,
+    next: index,
+    source: value
+  });
   token.value = token.raw;
   return token;
 }
@@ -714,10 +722,10 @@ export function searchWord(value: SourceArray, index: number): Lexer.Token {
 export function searchParenExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.SearchParenExpressionToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
@@ -725,39 +733,39 @@ export function searchParenExpr(
 
   const expr = searchExpr(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
   index = expr.next;
 
   index = Lexer.BWS(value, index);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    expr,
-    Lexer.TokenType.SearchParenExpression
-  );
+  return Token.tokenize({
+    type: 'SearchParenExpression',
+    value: expr,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function levels(value: SourceArray, index: number): Lexer.Token {
+export function levels(value: SourceArray, index: number): Token.LevelsToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24levels')) {
     index += 9;
   } else if (Utils.equals(value, index, '$levels')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
@@ -768,60 +776,72 @@ export function levels(value: SourceArray, index: number): Lexer.Token {
   } else {
     const token = PrimitiveLiteral.int32Value(value, index);
     if (!token) {
-      return;
+      return undefined;
     }
     level = token.raw;
     index = token.next;
   }
 
-  return Lexer.tokenize(value, start, index, level, Lexer.TokenType.Levels);
+  return Token.tokenize({
+    type: 'Levels',
+    value: level,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function filter(value: SourceArray, index: number): Lexer.Token {
+export function filter(value: SourceArray, index: number): Token.FilterToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24filter')) {
     index += 9;
   } else if (Utils.equals(value, index, '$filter')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const expr = Expressions.boolCommonExpr(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
   index = expr.next;
 
-  return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Filter);
+  return Token.tokenize({
+    type: 'Filter',
+    value: expr,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function orderby(value: SourceArray, index: number): Lexer.Token {
+export function orderby(value: SourceArray, index: number): Token.OrderByToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24orderby')) {
     index += 10;
   } else if (Utils.equals(value, index, '$orderby')) {
     index += 8;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const items = [];
   let token = orderbyItem(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
@@ -837,7 +857,7 @@ export function orderby(value: SourceArray, index: number): Lexer.Token {
       }
       token = orderbyItem(value, index);
       if (!token) {
-        return;
+        return undefined;
       }
       index = token.next;
     } else {
@@ -845,19 +865,19 @@ export function orderby(value: SourceArray, index: number): Lexer.Token {
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    { items },
-    Lexer.TokenType.OrderBy
-  );
+  return Token.tokenize({
+    type: 'OrderBy',
+    value: { items },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function orderbyItem(value: SourceArray, index: number): Lexer.Token {
+export function orderbyItem(value: SourceArray, index: number): Token.OrderByItemToken | undefined {
   const expr = Expressions.commonExpr(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
   const start = index;
   index = expr.next;
@@ -872,82 +892,94 @@ export function orderbyItem(value: SourceArray, index: number): Lexer.Token {
       index += 4;
       direction = -1;
     } else {
-      return;
+      return undefined;
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    { expr, direction },
-    Lexer.TokenType.OrderByItem
-  );
+  return Token.tokenize({
+    type: 'OrderByItem',
+    value: { expr, direction },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function skip(value: SourceArray, index: number): Lexer.Token {
+export function skip(value: SourceArray, index: number): Token.SkipToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24skip')) {
     index += 7;
   } else if (Utils.equals(value, index, '$skip')) {
     index += 5;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const token = PrimitiveLiteral.int32Value(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
-  return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Skip);
+  return Token.tokenize({
+    type: 'Skip',
+    value: token,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function top(value: SourceArray, index: number): Lexer.Token {
+export function top(value: SourceArray, index: number): Token.TopToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24top')) {
     index += 6;
   } else if (Utils.equals(value, index, '$top')) {
     index += 4;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const token = PrimitiveLiteral.int32Value(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
-  return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Top);
+  return Token.tokenize({
+    type: 'Top',
+    value: token,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function format(value: SourceArray, index: number): Lexer.Token {
+export function format(value: SourceArray, index: number): Token.FormatToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24format')) {
     index += 9;
   } else if (Utils.equals(value, index, '$format')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
@@ -970,67 +1002,67 @@ export function format(value: SourceArray, index: number): Lexer.Token {
   }
 
   if (format) {
-    return Lexer.tokenize(
-      value,
-      start,
-      index,
-      { format },
-      Lexer.TokenType.Format
-    );
+    return Token.tokenize({
+      type: 'Format',
+      value: { format },
+      position: start,
+      next: index,
+      source: value
+    });
   }
 }
 
-export function inlinecount(value: SourceArray, index: number): Lexer.Token {
+export function inlinecount(value: SourceArray, index: number): Token.InlineCountToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24count')) {
     index += 8;
   } else if (Utils.equals(value, index, '$count')) {
     index += 6;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const token = PrimitiveLiteral.booleanValue(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    Lexer.TokenType.InlineCount
-  );
+  return Token.tokenize({
+    type: 'InlineCount',
+    value: token,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function select(value: SourceArray, index: number): Lexer.Token {
+export function select(value: SourceArray, index: number): Token.SelectToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24select')) {
     index += 9;
   } else if (Utils.equals(value, index, '$select')) {
     index += 7;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const items = [];
   let token = selectItem(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   while (token) {
     items.push(token);
@@ -1045,19 +1077,25 @@ export function select(value: SourceArray, index: number): Lexer.Token {
       }
       token = selectItem(value, index);
       if (!token) {
-        return;
+        return undefined;
       }
     } else {
       break;
     }
   }
 
-  return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Select);
+  return Token.tokenize({
+    type: 'Select',
+    value: { items },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function selectItem(value: SourceArray, index: number): Lexer.Token {
+export function selectItem(value: SourceArray, index: number): Token.SelectItemToken | undefined {
   const start = index;
-  let item;
+  let item: { namespace?: string, value?: string, name?: Token.QualifiedEntityTypeNameToken | Token.QualifiedComplexTypeNameToken };
   const op = allOperationsInSchema(value, index);
   const star = Lexer.STAR(value, index);
   if (op > index) {
@@ -1073,7 +1111,7 @@ export function selectItem(value: SourceArray, index: number): Lexer.Token {
       NameOrIdentifier.qualifiedComplexTypeName(value, index);
 
     if (name && value[name.next] !== 0x2f) {
-      return;
+      return undefined;
     } else if (name && value[name.next] === 0x2f) {
       index++;
       item.name = name;
@@ -1084,7 +1122,7 @@ export function selectItem(value: SourceArray, index: number): Lexer.Token {
       qualifiedActionName(value, index) ||
       qualifiedFunctionName(value, index);
     if (!select) {
-      return;
+      return undefined;
     }
     index = select.next;
 
@@ -1092,13 +1130,13 @@ export function selectItem(value: SourceArray, index: number): Lexer.Token {
   }
 
   if (index > start) {
-    return Lexer.tokenize(
-      value,
-      start,
-      index,
-      item,
-      Lexer.TokenType.SelectItem
-    );
+    return Token.tokenize({
+      type: 'SelectItem',
+      value: { item },
+      position: start,
+      next: index,
+      source: value
+    });
   }
 }
 
@@ -1114,27 +1152,27 @@ export function allOperationsInSchema(
   return index;
 }
 
-export function selectProperty(value: SourceArray, index: number): Lexer.Token {
+export function selectProperty(value: SourceArray, index: number): Token.PrimitivePropertyToken | Token.PrimitiveKeyPropertyToken | Token.PrimitiveCollectionPropertyToken | Token.EntityNavigationPropertyToken | Token.EntityCollectionNavigationPropertyToken | Token.SelectPathToken | undefined {
   const token =
     selectPath(value, index) ||
     NameOrIdentifier.primitiveProperty(value, index) ||
     NameOrIdentifier.primitiveColProperty(value, index) ||
     NameOrIdentifier.navigationProperty(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   const start = index;
   index = token.next;
 
-  if (token.type === Lexer.TokenType.SelectPath) {
+  if (token.type === 'SelectPath') {
     if (value[index] === 0x2f) {
       index++;
       const prop = selectProperty(value, index);
 
       if (!prop) {
-        return;
+        return undefined;
       }
-      const path = Lexer.clone(token);
+      const path = Token.clone(token);
       token.next = prop.next;
       token.raw = Utils.stringify(value, start, token.next);
       token.value = { path, next: prop };
@@ -1144,13 +1182,13 @@ export function selectProperty(value: SourceArray, index: number): Lexer.Token {
   return token;
 }
 
-export function selectPath(value: SourceArray, index: number): Lexer.Token {
+export function selectPath(value: SourceArray, index: number): Token.SelectPathToken | undefined {
   const token =
     NameOrIdentifier.complexProperty(value, index) ||
     NameOrIdentifier.complexColProperty(value, index);
 
   if (!token) {
-    return;
+    return undefined;
   }
   const start = index;
   index = token.next;
@@ -1164,67 +1202,75 @@ export function selectPath(value: SourceArray, index: number): Lexer.Token {
     }
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    tokenValue,
-    Lexer.TokenType.SelectPath
-  );
+  return Token.tokenize({
+    type: 'SelectPath',
+    value: tokenValue,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
 export function qualifiedActionName(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ActionToken | undefined {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   const start = index;
   index = namespaceNext + 1;
 
   const action = NameOrIdentifier.action(value, index);
   if (!action) {
-    return;
+    return undefined;
   }
+  // TODO: This was always setting a namespace, even if the `value` was an `ActionToken` rather than
+  //       a `NamespacedNamedValue`.  Do we need to add `namespace` to the token class?  Or do we need
+  //       to assign the namespace to the nested Action value (recursively)?  Or do we need to only
+  //       set it if the value is not an `Token`?
+  // if (!(action instanceof Token.Token)) {
   action.value.namespace = Utils.stringify(value, start, namespaceNext);
+  // }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    action.next,
-    action,
-    Lexer.TokenType.Action
-  );
+  return Token.tokenize({
+    type: 'Action',
+    value: action, // TODO: should Action tokens be allowed to have another Action token as a value?
+    position: start,
+    next: action.next,
+    source: value
+  });
 }
 
 export function qualifiedFunctionName(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.FunctionToken | undefined {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   const start = index;
   index = namespaceNext + 1;
 
   const fn = NameOrIdentifier.odataFunction(value, index);
   if (!fn) {
-    return;
+    return undefined;
   }
   fn.value.namespace = Utils.stringify(value, start, namespaceNext);
   index = fn.next;
-  const tokenValue: any = { name: fn };
+  const tokenValue: {
+    name: Token.EntityFunctionToken | Token.EntityCollectionFunctionToken | Token.ComplexFunctionToken | Token.ComplexCollectionFunctionToken | Token.PrimitiveFunctionToken | Token.PrimitiveCollectionFunctionToken;
+    parameters: Token.ParameterNameToken[]
+  } = { name: fn, parameters: [] };
 
   const open = Lexer.OPEN(value, index);
   if (open) {
     index = open;
-    tokenValue.parameters = [];
     const param = Expressions.parameterName(value, index);
     if (!param) {
-      return;
+      return undefined;
     }
 
     while (param) {
@@ -1236,7 +1282,7 @@ export function qualifiedFunctionName(
         index = comma;
         const param = Expressions.parameterName(value, index);
         if (!param) {
-          return;
+          return undefined;
         }
       } else {
         break;
@@ -1245,39 +1291,39 @@ export function qualifiedFunctionName(
 
     const close = Lexer.CLOSE(value, index);
     if (!close) {
-      return;
+      return undefined;
     }
     index = close;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    tokenValue,
-    Lexer.TokenType.Function
-  );
+  return Token.tokenize({
+    type: 'Function',
+    value: tokenValue,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function skiptoken(value: SourceArray, index: number): Lexer.Token {
+export function skiptoken(value: SourceArray, index: number): Token.SkipTokenToken | undefined {
   const start = index;
   if (Utils.equals(value, index, '%24skiptoken')) {
     index += 12;
   } else if (Utils.equals(value, index, '$skiptoken')) {
     index += 10;
   } else {
-    return;
+    return undefined;
   }
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   let ch = Lexer.qcharNoAMP(value, index);
   if (!ch) {
-    return;
+    return undefined;
   }
   const valueStart = index;
 
@@ -1286,43 +1332,40 @@ export function skiptoken(value: SourceArray, index: number): Lexer.Token {
     ch = Lexer.qcharNoAMP(value, index);
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    Utils.stringify(value, valueStart, index),
-    Lexer.TokenType.SkipToken
-  );
+  return Token.tokenize({
+    type: 'SkipToken',
+    value: Utils.stringify(value, valueStart, index),
+    position: start,
+    next: index,
+    source: value
+  });
 }
 
-export function aliasAndValue(value: SourceArray, index: number): Lexer.Token {
+export function aliasAndValue(value: SourceArray, index: number): Token.AliasAndValueToken | undefined {
   const alias = Expressions.parameterAlias(value, index);
   if (!alias) {
-    return;
+    return undefined;
   }
   const start = index;
   index = alias.next;
 
   const eq = Lexer.EQ(value, index);
   if (!eq) {
-    return;
+    return undefined;
   }
   index = eq;
 
   const paramValue = Expressions.parameterValue(value, index);
   if (!paramValue) {
-    return;
+    return undefined;
   }
   index = paramValue.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      alias,
-      value: paramValue
-    },
-    Lexer.TokenType.AliasAndValue
-  );
+  return Token.tokenize({
+    type: 'AliasAndValue',
+    value: { alias, value: paramValue },
+    position: start,
+    next: index,
+    source: value
+  });
 }

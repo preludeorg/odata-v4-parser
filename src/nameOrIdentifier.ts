@@ -1,43 +1,45 @@
+import { PrimitiveTypeEnum } from '@odata/metadata';
 import * as Lexer from './lexer';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import * as Token from './token';
 import Utils, { SourceArray } from './utils';
 
-export function enumeration(value: SourceArray, index: number): Lexer.EnumToken | undefined {
+export function enumeration(value: SourceArray, index: number): Token.EnumToken | undefined {
   const type = qualifiedEnumTypeName(value, index);
   if (!type) {
-    return;
+    return undefined;
   }
   const start = index;
   index = type.next;
 
   let squote = Lexer.SQUOTE(value, index);
   if (!squote) {
-    return;
+    return undefined;
   }
   index = squote;
 
   const enumVal = enumValue(value, index);
   if (!enumVal) {
-    return;
+    return undefined;
   }
   index = enumVal.next;
 
   squote = Lexer.SQUOTE(value, index);
   if (!squote) {
-    return;
+    return undefined;
   }
   index = squote;
 
-  return Lexer.tokenize({ type: 'Enum', value: { name: type, value: enumVal }, position: start, next: index }, value);
+  return Token.tokenize({ type: 'Enum', value: { name: type, value: enumVal }, position: start, next: index, source: value });
 }
-export function enumValue(value: SourceArray, index: number): Lexer.EnumValueToken | undefined {
+export function enumValue(value: SourceArray, index: number): Token.EnumValueToken | undefined {
   let val = singleEnumValue(value, index);
   if (!val) {
-    return;
+    return undefined;
   }
   const start = index;
 
-  const arr: (Lexer.EnumerationMemberToken | Lexer.EnumMemberValueToken)[] = [];
+  const arr: (Token.EnumerationMemberToken | Token.EnumMemberValueToken)[] = [];
   while (val) {
     arr.push(val);
     index = val.next;
@@ -50,28 +52,27 @@ export function enumValue(value: SourceArray, index: number): Lexer.EnumValueTok
     }
   }
 
-  return Lexer.tokenize({ type: 'EnumValue', value: { values: arr }, position: start, next: index }, value);
+  return Token.tokenize({ type: 'EnumValue', value: { values: arr }, position: start, next: index, source: value });
 }
 export function singleEnumValue(
   value: SourceArray,
   index: number
-): Lexer.EnumerationMemberToken | Lexer.EnumMemberValueToken | undefined {
+): Token.EnumerationMemberToken | Token.EnumMemberValueToken | undefined {
   return enumerationMember(value, index) || enumMemberValue(value, index);
 }
 export function enumMemberValue(
   value: SourceArray,
   index: number
-): Lexer.EnumMemberValueToken {
+): Token.EnumMemberValueToken | undefined {
   const token = PrimitiveLiteral.int64Value(value, index);
-  const tokenValue = token?.value;
-  if (typeof tokenValue === 'string') {
-    return { ...token, type: 'EnumMemberValue', value: tokenValue };
+  if (token) {
+    return new Token.Token({ ...token, type: 'EnumMemberValue' });
   }
 }
 export function singleQualifiedTypeName(
   value: SourceArray,
   index: number
-): Lexer.QualifiedEntityTypeNameToken | Lexer.QualifiedComplexTypeNameToken | Lexer.IdentifierToken | undefined {
+): Token.QualifiedEntityTypeNameToken | Token.QualifiedComplexTypeNameToken | Token.IdentifierToken | undefined {
   return (
     qualifiedEntityTypeName(value, index) ||
     qualifiedComplexTypeName(value, index) ||
@@ -83,34 +84,36 @@ export function singleQualifiedTypeName(
 export function qualifiedTypeName(
   value: SourceArray,
   index: number
-): Lexer.CollectionToken | Lexer.QualifiedEntityTypeNameToken | Lexer.QualifiedComplexTypeNameToken | Lexer.IdentifierToken | undefined {
+): Token.CollectionToken | Token.QualifiedEntityTypeNameToken | Token.QualifiedComplexTypeNameToken | Token.IdentifierToken | undefined {
   if (Utils.equals(value, index, 'Collection')) {
     const start = index;
     index += 10;
 
     let squote = Lexer.SQUOTE(value, index);
     if (!squote) {
-      return;
+      return undefined;
     }
     index = squote;
 
-    const token: Lexer.QualifiedEntityTypeNameToken | Lexer.QualifiedComplexTypeNameToken | Lexer.IdentifierToken | Lexer.CollectionToken =
+    const token: Token.QualifiedEntityTypeNameToken | Token.QualifiedComplexTypeNameToken | Token.IdentifierToken | Token.CollectionToken | undefined =
       singleQualifiedTypeName(value, index);
     if (!token) {
-      return;
+      return undefined;
     }
     index = token.next;
 
     squote = Lexer.SQUOTE(value, index);
     if (!squote) {
-      return;
+      return undefined;
     }
     index = squote;
 
     token.position = start;
     token.next = index;
     token.raw = Utils.stringify(value, token.position, token.next);
+    // TODO: fix this type error
     token.type = 'Collection';
+    // TODO: should there be a return here?
   } else {
     return singleQualifiedTypeName(value, index);
   }
@@ -119,12 +122,12 @@ export function qualifiedEntityTypeName(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.QualifiedEntityTypeNameToken | undefined {
+): Token.QualifiedEntityTypeNameToken | undefined {
   const start = index;
   const namespaceNext = namespace(value, index);
 
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   let schema;
   if (typeof metadataContext === 'object') {
@@ -134,21 +137,21 @@ export function qualifiedEntityTypeName(
   }
   const name = entityTypeName(value, namespaceNext + 1, schema);
   if (!name) {
-    return;
+    return undefined;
   }
   name.value.namespace = Utils.stringify(value, start, namespaceNext);
 
-  return Lexer.tokenize({ type: 'QualifiedEntityTypeName', value: name, position: start, next: name.next }, value);
+  return Token.tokenize({ type: 'QualifiedEntityTypeName', value: name, position: start, next: name.next, source: value });
 }
 export function qualifiedComplexTypeName(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.QualifiedComplexTypeNameToken | undefined {
+): Token.QualifiedComplexTypeNameToken | undefined {
   const start = index;
   const namespaceNext = namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   let schema;
   if (typeof metadataContext === 'object') {
@@ -158,43 +161,43 @@ export function qualifiedComplexTypeName(
   }
   const name = complexTypeName(value, namespaceNext + 1, schema);
   if (!name) {
-    return;
+    return undefined;
   }
   name.value.namespace = Utils.stringify(value, start, namespaceNext);
 
-  return Lexer.tokenize({ type: 'QualifiedComplexTypeName', value: name, position: start, next: name.next }, value);
+  return Token.tokenize({ type: 'QualifiedComplexTypeName', value: name, position: start, next: name.next, source: value });
 }
 export function qualifiedTypeDefinitionName(
   value: SourceArray,
   index: number
-): Lexer.IdentifierToken | undefined {
+): Token.IdentifierToken | undefined {
   const start = index;
   const namespaceNext = namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   const nameNext = typeDefinitionName(value, namespaceNext + 1);
   if (nameNext && nameNext.next === namespaceNext + 1) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize({ type: 'Identifier', value: 'TypeDefinitionName', position: start, next: nameNext.next }, value);
+  return Token.tokenize({ type: 'Identifier', value: 'TypeDefinitionName', position: start, next: nameNext.next, source: value });
 }
 export function qualifiedEnumTypeName(
   value: SourceArray,
   index: number
-): Lexer.IdentifierToken | undefined {
+): Token.IdentifierToken | undefined {
   const start = index;
   const namespaceNext = namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   const nameNext = enumerationTypeName(value, namespaceNext + 1);
   if (nameNext && nameNext.next === namespaceNext + 1) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize({ type: 'Identifier', value: 'EnumTypeName', position: start, next: nameNext.next }, value);
+  return Token.tokenize({ type: 'Identifier', value: 'EnumTypeName', position: start, next: nameNext.next, source: value });
 }
 export function namespace(value: SourceArray, index: number): number {
   let part = namespacePart(value, index);
@@ -211,7 +214,7 @@ export function namespace(value: SourceArray, index: number): number {
 
   return index - 1;
 }
-type ODataIdentifierTokenType = Lexer.TokenType & (
+type ODataIdentifierTokenType = Token.TokenType & (
   | 'Action'
   | 'ActionImport'
   | 'ComplexCollectionFunction'
@@ -231,8 +234,11 @@ type ODataIdentifierTokenType = Lexer.TokenType & (
   | 'EntityNavigationProperty'
   | 'EntitySetName'
   | 'EntityTypeName'
+  | 'KeyPropertyAlias'
+  | 'LambdaVariableExpression'
   | 'NamespacePart'
   | 'ODataIdentifier'
+  | 'ParameterName'
   | 'PrimitiveCollectionFunction'
   | 'PrimitiveCollectionFunctionImport'
   | 'PrimitiveCollectionProperty'
@@ -248,7 +254,7 @@ export function odataIdentifier<T extends ODataIdentifierTokenType>(
   value: SourceArray,
   index: number,
   tokenType?: T
-): Lexer.Token & { type: T } {
+): Token.LexerToken & { type: T } | undefined {
   const start = index;
   if (Lexer.identifierLeadingCharacter(value[index])) {
     index++;
@@ -262,29 +268,29 @@ export function odataIdentifier<T extends ODataIdentifierTokenType>(
   }
 
   if (index > start) {
-    const token: Lexer.PartialToken & { type: T } = {
+    return Token.tokenize({
       type: tokenType,
       value: { name: Utils.stringify(value, start, index) },
       position: start,
-      next: index
-    };
-    return Lexer.tokenize(token, value);
+      next: index,
+      source: value
+    });
   }
 }
 export function namespacePart(
   value: SourceArray,
   index: number
-): Lexer.NamespacePartToken | undefined {
+): Token.NamespacePartToken | undefined {
   return odataIdentifier(value, index, 'NamespacePart');
 }
 export function entitySetName(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntitySetNameToken | undefined {
+): Token.EntitySetNameToken | undefined {
   const token = odataIdentifier(value, index, 'EntitySetName');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -301,7 +307,7 @@ export function entitySetName(
       )
     );
     if (!entitySet) {
-      return;
+      return undefined;
     }
 
     let entityType;
@@ -319,7 +325,7 @@ export function entitySetName(
         })
     );
     if (!entityType) {
-      return;
+      return undefined;
     }
 
     token.metadata = entityType;
@@ -330,23 +336,23 @@ export function entitySetName(
 export function singletonEntity(
   value: SourceArray,
   index: number
-): Lexer.SingletonEntityToken | undefined {
+): Token.SingletonEntityToken | undefined {
   return odataIdentifier(value, index, 'SingletonEntity');
 }
 export function entityTypeName(
   value: SourceArray,
   index: number,
   schema?: any
-): Lexer.EntityTypeNameToken | undefined {
+): Token.EntityTypeNameToken | undefined {
   const token = odataIdentifier(value, index, 'EntityTypeName');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof schema === 'object') {
     const type = schema.entityTypes.filter((it) => it.name === token.raw)[0];
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -357,16 +363,16 @@ export function complexTypeName(
   value: SourceArray,
   index: number,
   schema?: any
-): Lexer.ComplexTypeNameToken | undefined {
+): Token.ComplexTypeNameToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexTypeName');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof schema === 'object') {
     const type = schema.complexTypes.filter((it) => it.name === token.raw)[0];
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -376,30 +382,30 @@ export function complexTypeName(
 export function typeDefinitionName(
   value: SourceArray,
   index: number
-): Lexer.TypeDefinitionNameToken | undefined {
+): Token.TypeDefinitionNameToken | undefined {
   return odataIdentifier(value, index, 'TypeDefinitionName');
 }
 export function enumerationTypeName(
   value: SourceArray,
   index: number
-): Lexer.EnumerationTypeNameToken | undefined {
+): Token.EnumerationTypeNameToken | undefined {
   return odataIdentifier(value, index, 'EnumerationTypeName');
 }
 export function enumerationMember(
   value: SourceArray,
   index: number
-): Lexer.EnumerationMemberToken | undefined {
+): Token.EnumerationMemberToken | undefined {
   return odataIdentifier(value, index, 'EnumerationMember');
 }
-export function termName(value: SourceArray, index: number): Lexer.TermNameToken {
+export function termName(value: SourceArray, index: number): Token.TermNameToken | undefined {
   return odataIdentifier(value, index, 'TermName');
 }
 export function primitiveTypeName(
   value: SourceArray,
   index: number
-): Lexer.IdentifierToken | undefined {
+): Token.IdentifierToken | undefined {
   if (!Utils.equals(value, index, 'Edm.')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 4;
@@ -438,42 +444,16 @@ export function primitiveTypeName(
       Utils.equals(value, index, 'GeometryPolygon'));
 
   if (end > index) {
-    return Lexer.tokenize({ type: 'Identifier', value: 'PrimitiveTypeName', position: start, next: end }, value);
+    return Token.tokenize({
+      type: 'Identifier',
+      value: 'PrimitiveTypeName',
+      position: start,
+      next: end,
+      source: value
+    });
   }
 }
-const primitiveTypes: string[] = [
-  'Edm.Binary',
-  'Edm.Boolean',
-  'Edm.Byte',
-  'Edm.Date',
-  'Edm.DateTimeOffset',
-  'Edm.Decimal',
-  'Edm.Double',
-  'Edm.Duration',
-  'Edm.Guid',
-  'Edm.Int16',
-  'Edm.Int32',
-  'Edm.Int64',
-  'Edm.SByte',
-  'Edm.Single',
-  'Edm.Stream',
-  'Edm.String',
-  'Edm.TimeOfDay',
-  'Edm.GeographyCollection',
-  'Edm.GeographyLineString',
-  'Edm.GeographyMultiLineString',
-  'Edm.GeographyMultiPoint',
-  'Edm.GeographyMultiPolygon',
-  'Edm.GeographyPoint',
-  'Edm.GeographyPolygon',
-  'Edm.GeometryCollection',
-  'Edm.GeometryLineString',
-  'Edm.GeometryMultiLineString',
-  'Edm.GeometryMultiPoint',
-  'Edm.GeometryMultiPolygon',
-  'Edm.GeometryPoint',
-  'Edm.GeometryPolygon'
-];
+const primitiveTypes: string[] = Object.values(PrimitiveTypeEnum);
 export function isPrimitiveTypeName(
   type: string,
   metadataContext?: any
@@ -519,12 +499,12 @@ export function primitiveProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitivePropertyToken | Lexer.PrimitiveKeyPropertyToken | undefined {
-  const token: Lexer.PrimitivePropertyToken | Lexer.PrimitiveKeyPropertyToken | undefined =
+): Token.PrimitivePropertyToken | Token.PrimitiveKeyPropertyToken | undefined {
+  const token: Token.PrimitivePropertyToken | Token.PrimitiveKeyPropertyToken | undefined =
     odataIdentifier(value, index, 'PrimitiveProperty');
 
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -535,7 +515,7 @@ export function primitiveProperty(
           prop.type.indexOf('Collection') === 0 ||
           !isPrimitiveTypeName(prop.type, metadataContext)
         ) {
-          return;
+          return undefined;
         }
         token.metadata = prop;
 
@@ -544,6 +524,7 @@ export function primitiveProperty(
           metadataContext.key.propertyRefs.filter((it) => it.name === prop.name)
             .length > 0
         ) {
+          // TODO: fix this type error
           token.type = 'PrimitiveKeyProperty';
         }
 
@@ -552,7 +533,7 @@ export function primitiveProperty(
     }
 
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -562,7 +543,7 @@ export function primitiveKeyProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitiveKeyPropertyToken | undefined {
+): Token.PrimitiveKeyPropertyToken | undefined {
   const token = primitiveProperty(value, index, metadataContext);
   if (token && token.type === 'PrimitiveKeyProperty') {
     return token;
@@ -572,7 +553,7 @@ export function primitiveNonKeyProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitivePropertyToken | undefined {
+): Token.PrimitivePropertyToken | undefined {
   const token = primitiveProperty(value, index, metadataContext);
   if (token && token.type === 'PrimitiveProperty') {
     return token;
@@ -582,12 +563,12 @@ export function primitiveColProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitiveCollectionPropertyToken | Lexer.PrimitiveKeyPropertyToken | undefined {
-  const token: Lexer.PrimitiveCollectionPropertyToken | Lexer.PrimitiveKeyPropertyToken | undefined =
+): Token.PrimitiveCollectionPropertyToken | Token.PrimitiveKeyPropertyToken | undefined {
+  const token: Token.PrimitiveCollectionPropertyToken | Token.PrimitiveKeyPropertyToken | undefined =
     odataIdentifier(value, index, 'PrimitiveCollectionProperty');
 
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -598,7 +579,7 @@ export function primitiveColProperty(
           prop.type.indexOf('Collection') === -1 ||
           !isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)
         ) {
-          return;
+          return undefined;
         }
         token.metadata = prop;
 
@@ -606,6 +587,7 @@ export function primitiveColProperty(
           metadataContext.key.propertyRefs.filter((it) => it.name === prop.name)
             .length > 0
         ) {
+          // TODO: fix this type error
           token.type = 'PrimitiveKeyProperty';
         }
 
@@ -614,7 +596,7 @@ export function primitiveColProperty(
     }
 
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -624,10 +606,10 @@ export function complexProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.ComplexPropertyToken | undefined {
+): Token.ComplexPropertyToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexProperty');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -638,21 +620,21 @@ export function complexProperty(
           prop.type.indexOf('Collection') === 0 ||
           isPrimitiveTypeName(prop.type, metadataContext)
         ) {
-          return;
+          return undefined;
         }
         const root = getMetadataRoot(metadataContext);
         const schema = root.schemas.filter(
           (it) => prop.type.indexOf(`${it.namespace}.`) === 0
         )[0];
         if (!schema) {
-          return;
+          return undefined;
         }
 
         const complexType = schema.complexTypes.filter(
           (it) => it.name === prop.type.split('.').pop()
         )[0];
         if (!complexType) {
-          return;
+          return undefined;
         }
 
         token.metadata = complexType;
@@ -661,7 +643,7 @@ export function complexProperty(
     }
 
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -671,10 +653,10 @@ export function complexColProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.ComplexCollectionPropertyToken | undefined {
+): Token.ComplexCollectionPropertyToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexCollectionProperty');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -685,21 +667,21 @@ export function complexColProperty(
           prop.type.indexOf('Collection') === -1 ||
           isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)
         ) {
-          return;
+          return undefined;
         }
         const root = getMetadataRoot(metadataContext);
         const schema = root.schemas.filter(
           (it) => prop.type.slice(11, -1).indexOf(`${it.namespace}.`) === 0
         )[0];
         if (!schema) {
-          return;
+          return undefined;
         }
 
         const complexType = schema.complexTypes.filter(
           (it) => it.name === prop.type.slice(11, -1).split('.').pop()
         )[0];
         if (!complexType) {
-          return;
+          return undefined;
         }
 
         token.metadata = complexType;
@@ -708,7 +690,7 @@ export function complexColProperty(
     }
 
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -718,10 +700,10 @@ export function streamProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.StreamPropertyToken | undefined {
+): Token.StreamPropertyToken | undefined {
   const token = odataIdentifier(value, index, 'StreamProperty');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -729,7 +711,7 @@ export function streamProperty(
       const prop = metadataContext.properties[i];
       if (prop.name === token.raw) {
         if (prop.type !== 'Edm.Stream') {
-          return;
+          return undefined;
         }
         token.metadata = prop;
         break;
@@ -737,7 +719,7 @@ export function streamProperty(
     }
 
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -748,7 +730,7 @@ export function navigationProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntityNavigationPropertyToken | Lexer.EntityCollectionNavigationPropertyToken | undefined {
+): Token.EntityNavigationPropertyToken | Token.EntityCollectionNavigationPropertyToken | undefined {
   return (
     entityNavigationProperty(value, index, metadataContext) ||
     entityColNavigationProperty(value, index, metadataContext)
@@ -758,10 +740,10 @@ export function entityNavigationProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntityNavigationPropertyToken | undefined {
+): Token.EntityNavigationPropertyToken | undefined {
   const token = odataIdentifier(value, index, 'EntityNavigationProperty');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -777,21 +759,21 @@ export function entityNavigationProperty(
           (it) => prop.type.indexOf(`${it.namespace}.`) === 0
         )[0];
         if (!schema) {
-          return;
+          return undefined;
         }
 
         const entityType = schema.entityTypes.filter(
           (it) => it.name === prop.type.split('.').pop()
         )[0];
         if (!entityType) {
-          return;
+          return undefined;
         }
 
         token.metadata = entityType;
       }
     }
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -801,10 +783,10 @@ export function entityColNavigationProperty(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntityCollectionNavigationPropertyToken | undefined {
+): Token.EntityCollectionNavigationPropertyToken | undefined {
   const token = odataIdentifier(value, index, 'EntityCollectionNavigationProperty');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -820,21 +802,21 @@ export function entityColNavigationProperty(
           (it) => prop.type.slice(11, -1).indexOf(`${it.namespace}.`) === 0
         )[0];
         if (!schema) {
-          return;
+          return undefined;
         }
 
         const entityType = schema.entityTypes.filter(
           (it) => it.name === prop.type.slice(11, -1).split('.').pop()
         )[0];
         if (!entityType) {
-          return;
+          return undefined;
         }
 
         token.metadata = entityType;
       }
     }
     if (!token.metadata) {
-      return;
+      return undefined;
     }
   }
 
@@ -844,12 +826,12 @@ export function entityColNavigationProperty(
 export function action(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.ActionToken | undefined {
+): Token.ActionToken | undefined {
   const token = odataIdentifier(value, index, 'Action');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -863,7 +845,7 @@ export function action(
       'entityTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
   }
 
@@ -873,16 +855,16 @@ export function actionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.ActionImportToken | undefined {
+): Token.ActionImportToken | undefined {
   const token = odataIdentifier(value, index, 'ActionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
     const type = getOperationImportType('action', metadataContext, token);
     if (!type) {
-      return;
+      return undefined;
     }
   }
 
@@ -892,7 +874,7 @@ export function actionImport(
 export function odataFunction(
   value: SourceArray,
   index: number
-): Lexer.EntityFunctionToken | Lexer.EntityCollectionFunctionToken | Lexer.ComplexFunctionToken | Lexer.ComplexCollectionFunctionToken | Lexer.PrimitiveFunctionToken | Lexer.PrimitiveCollectionFunctionToken | undefined {
+): Token.EntityFunctionToken | Token.EntityCollectionFunctionToken | Token.ComplexFunctionToken | Token.ComplexCollectionFunctionToken | Token.PrimitiveFunctionToken | Token.PrimitiveCollectionFunctionToken | undefined {
   return (
     entityFunction(value, index) ||
     entityColFunction(value, index) ||
@@ -906,7 +888,7 @@ export function odataFunction(
 export function getOperationType(
   operation: string,
   metadataContext: any,
-  token: Lexer.Token,
+  token: Token.Token,
   isBoundCollection: boolean,
   isCollection: boolean,
   isPrimitive: boolean,
@@ -944,7 +926,7 @@ export function getOperationType(
     }
   }
   if (!fnDef) {
-    return;
+    return undefined;
   }
 
   if (operation === 'action') {
@@ -952,19 +934,22 @@ export function getOperationType(
   }
 
   if (fnDef.returnType.type.indexOf('Collection') === isCollection ? -1 : 0) {
-    return;
+    return undefined;
   }
   const elementType = isCollection
     ? fnDef.returnType.type.slice(11, -1)
     : fnDef.returnType.type;
   if (isPrimitiveTypeName(elementType, metadataContext) && !isPrimitive) {
-    return;
+    return undefined;
   }
   if (!isPrimitiveTypeName(elementType, metadataContext) && isPrimitive) {
-    return;
+    return undefined;
   }
   if (isPrimitive) {
     return elementType;
+  }
+  if (!types) {
+    return undefined;
   }
 
   let type;
@@ -989,12 +974,12 @@ export function getOperationType(
 export function entityFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.EntityFunctionToken | undefined {
+): Token.EntityFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'EntityFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1008,7 +993,7 @@ export function entityFunction(
       'entityTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1018,12 +1003,12 @@ export function entityFunction(
 export function entityColFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.EntityCollectionFunctionToken | undefined {
+): Token.EntityCollectionFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'EntityCollectionFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1037,7 +1022,7 @@ export function entityColFunction(
       'entityTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1047,12 +1032,12 @@ export function entityColFunction(
 export function complexFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.ComplexFunctionToken | undefined {
+): Token.ComplexFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1066,7 +1051,7 @@ export function complexFunction(
       'complexTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1076,12 +1061,12 @@ export function complexFunction(
 export function complexColFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.ComplexCollectionFunctionToken | undefined {
+): Token.ComplexCollectionFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexCollectionFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1095,7 +1080,7 @@ export function complexColFunction(
       'complexTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1105,12 +1090,12 @@ export function complexColFunction(
 export function primitiveFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.PrimitiveFunctionToken | undefined {
+): Token.PrimitiveFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'PrimitiveFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1123,7 +1108,7 @@ export function primitiveFunction(
       true
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1133,12 +1118,12 @@ export function primitiveFunction(
 export function primitiveColFunction(
   value: SourceArray,
   index: number,
-  isCollection?: boolean,
+  isCollection: boolean = false,
   metadataContext?: any
-): Lexer.PrimitiveCollectionFunctionToken | undefined {
+): Token.PrimitiveCollectionFunctionToken | undefined {
   const token = odataIdentifier(value, index, 'PrimitiveCollectionFunction');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1151,7 +1136,7 @@ export function primitiveColFunction(
       true
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1162,11 +1147,11 @@ export function primitiveColFunction(
 export function getOperationImportType(
   operation: string,
   metadataContext: any,
-  token: Lexer.Token,
-  isCollection?: boolean,
+  token: Token.Token,
+  isCollection: boolean = false,
   isPrimitive?: boolean,
   types?: string
-): any {
+): any { // TODO: return type
   let fnImport;
 
   for (let i = 0; i < metadataContext.dataServices.schemas.length; i++) {
@@ -1189,7 +1174,7 @@ export function getOperationImportType(
     }
   }
   if (!fnImport) {
-    return;
+    return undefined;
   }
 
   let fn;
@@ -1209,26 +1194,29 @@ export function getOperationImportType(
     }
   }
   if (!fn) {
-    return;
+    return undefined;
   }
 
   if (operation === 'action') {
     return fn;
   }
   if (fn.returnType.type.indexOf('Collection') === isCollection ? -1 : 0) {
-    return;
+    return undefined;
   }
   const elementType = isCollection
     ? fn.returnType.type.slice(11, -1)
     : fn.returnType.type;
   if (isPrimitiveTypeName(elementType, metadataContext) && !isPrimitive) {
-    return;
+    return undefined;
   }
   if (!isPrimitiveTypeName(elementType, metadataContext) && isPrimitive) {
-    return;
+    return undefined;
   }
   if (isPrimitive) {
     return elementType;
+  }
+  if (!types) {
+    return undefined;
   }
 
   let type;
@@ -1254,10 +1242,10 @@ export function entityFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntityFunctionImportToken | undefined {
+): Token.EntityFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'EntityFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1270,7 +1258,7 @@ export function entityFunctionImport(
       'entityTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1281,10 +1269,10 @@ export function entityColFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.EntityCollectionFunctionImportToken | undefined {
+): Token.EntityCollectionFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'EntityCollectionFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1297,7 +1285,7 @@ export function entityColFunctionImport(
       'entityTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1308,10 +1296,10 @@ export function complexFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.ComplexFunctionImportToken | undefined {
+): Token.ComplexFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1324,7 +1312,7 @@ export function complexFunctionImport(
       'complexTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1335,10 +1323,10 @@ export function complexColFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.ComplexCollectionFunctionImportToken | undefined {
+): Token.ComplexCollectionFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'ComplexCollectionFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1351,7 +1339,7 @@ export function complexColFunctionImport(
       'complexTypes'
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1362,10 +1350,10 @@ export function primitiveFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitiveFunctionImportToken | undefined {
+): Token.PrimitiveFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'PrimitiveFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1377,7 +1365,7 @@ export function primitiveFunctionImport(
       true
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }
@@ -1388,10 +1376,10 @@ export function primitiveColFunctionImport(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.PrimitiveCollectionFunctionImportToken | undefined {
+): Token.PrimitiveCollectionFunctionImportToken | undefined {
   const token = odataIdentifier(value, index, 'PrimitiveCollectionFunctionImport');
   if (!token) {
-    return;
+    return undefined;
   }
 
   if (typeof metadataContext === 'object') {
@@ -1403,7 +1391,7 @@ export function primitiveColFunctionImport(
       true
     );
     if (!type) {
-      return;
+      return undefined;
     }
     token.metadata = type;
   }

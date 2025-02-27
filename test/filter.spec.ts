@@ -2,9 +2,7 @@ import { get } from '@newdash/newdash';
 import { Edm } from '@odata/metadata';
 import { defaultParser, ODataFilter, ODataParam } from '../src';
 
-
 describe('Filter Test Suite', () => {
-
   it('should support simple eq', () => {
     defaultParser.query('$format=json&$filter=A eq 2');
   });
@@ -21,39 +19,38 @@ describe('Filter Test Suite', () => {
   });
 
   it('shuold support filter without double quote', () => {
-    const filter = ODataFilter.New().field("key").eq('val')
-    const filterStr = ODataParam.New().filter(filter).toString()
-    expect(filterStr).toMatchSnapshot()
-    const ast = defaultParser.query(filterStr)
-    expect(ast).toMatchSnapshot()
-  })
+    const filter = ODataFilter.New().field('key').eq('val');
+    const filterStr = ODataParam.New().filter(filter).toString();
+    expect(filterStr).toMatchSnapshot();
+    const ast = defaultParser.query(filterStr);
+    expect(ast).toMatchSnapshot();
+  });
 
   it('shuold support filter with other chars', () => {
-    const filter = ODataFilter.New().field("key").eq('val$%^&*()_')
-    const filterStr = ODataParam.New().filter(filter).toString()
-    expect(filterStr).toMatchSnapshot()
-    const ast = defaultParser.query(filterStr)
-    expect(ast).toMatchSnapshot()
-  })
+    const filter = ODataFilter.New().field('key').eq('val$%^&*()_');
+    const filterStr = ODataParam.New().filter(filter).toString();
+    expect(filterStr).toMatchSnapshot();
+    const ast = defaultParser.query(filterStr);
+    expect(ast).toMatchSnapshot();
+  });
 
   it('shuold support filter with double quote', () => {
-    const filter = ODataFilter.New().field("key").eq('val"')
-    const filterStr = ODataParam.New().filter(filter).toString()
-    expect(filterStr).toMatchSnapshot()
-    const ast = defaultParser.query(filterStr)
-    expect(ast).toMatchSnapshot()
-  })
+    const filter = ODataFilter.New().field('key').eq('val"');
+    const filterStr = ODataParam.New().filter(filter).toString();
+    expect(filterStr).toMatchSnapshot();
+    const ast = defaultParser.query(filterStr);
+    expect(ast).toMatchSnapshot();
+  });
 
   it('shuold support filter with single quote', () => {
-    const filter = ODataFilter.New().field("key").eq("T''A First")
-    const filterStr = ODataParam.New().filter(filter).toString()
-    expect(filterStr).toMatchSnapshot()
-    const ast = defaultParser.query(filterStr)
-    expect(ast).toMatchSnapshot()
-  })
+    const filter = ODataFilter.New().field('key').eq("T''A First");
+    const filterStr = ODataParam.New().filter(filter).toString();
+    expect(filterStr).toMatchSnapshot();
+    const ast = defaultParser.query(filterStr);
+    expect(ast).toMatchSnapshot();
+  });
 
   it('should support complex filter', () => {
-
     const sFilter = ODataFilter.New()
       .field('A').eq(1).field('A').eq(2)
       .field('B').gt(3)
@@ -66,7 +63,5 @@ describe('Filter Test Suite', () => {
       .toString();
 
     defaultParser.filter(sFilter);
-
   });
-
 });

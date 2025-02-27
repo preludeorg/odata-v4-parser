@@ -21,7 +21,7 @@ describe('Primitive literals from json', () => {
         const literal = (PrimitiveLiteral[literalFunctionName] || PrimitiveLiteral.primitiveLiteral)(source, 0);
         if (item['-FailAt'] !== undefined) {
           expect(literal).toBeUndefined();
-          return;
+          return undefined;
         }
         // extract properties
         expect({ ...literal }).toStrictEqual(item[resultName]);

@@ -5,7 +5,8 @@ describe('Visitor Parse Suite', () => {
   const createSeqTokenProcessor = (key: string, arr: Array<any>) => () => arr.push(key);
 
   const createSeqTraverser = (deepFirst = false) => {
-    const visitSequence = [];
+    // TODO: stronger typing
+    const visitSequence: string[] = [];
 
     const visit = createTraverser({
       Top: createSeqTokenProcessor('param:top', visitSequence),
@@ -26,19 +27,18 @@ describe('Visitor Parse Suite', () => {
     return { visit, visitSequence };
   };
 
-
   it('should visit filter', () => {
-
     const expectedSeq = ['and', 'paren', 'eq', 'lit', 'paren', 'eq', 'lit'];
 
     const { visit, visitSequence } = createSeqTraverser();
 
     const node = defaultParser.filter('(A eq 2) and (V eq 3)');
 
-    visit(node);
+    if (node) {
+      visit(node);
+    }
 
     expect(visitSequence).toEqual(expectedSeq);
-
   });
 
   it('should visit filter deep first', () => {

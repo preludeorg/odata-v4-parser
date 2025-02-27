@@ -6,6 +6,7 @@
     "target": "ES2018",
     "declaration": true,
     "sourceMap": true,
+    "strict": true,
     "newLine": "lf",
     "resolveJsonModule": true,
     "lib": [

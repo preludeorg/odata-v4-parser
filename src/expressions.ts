@@ -2,10 +2,11 @@ import * as ArrayOrObject from './json';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import * as Token from './token';
 import Utils, { SourceArray } from './utils';
 
-export function commonExpr(value: SourceArray, index: number): Lexer.Token {
-  const token =
+export function commonExpr(value: SourceArray, index: number): Token.CommonExpressionToken | undefined {
+  let token =
     PrimitiveLiteral.primitiveLiteral(value, index) ||
     parameterAlias(value, index) ||
     ArrayOrObject.arrayOrObject(value, index) ||
@@ -18,7 +19,7 @@ export function commonExpr(value: SourceArray, index: number): Lexer.Token {
     castExpr(value, index);
 
   if (!token) {
-    return;
+    return undefined;
   }
 
   const expr =
@@ -29,24 +30,25 @@ export function commonExpr(value: SourceArray, index: number): Lexer.Token {
     modExpr(value, token.next);
 
   if (expr) {
-    token.value = {
-      left: Lexer.clone(token),
-      right: expr.value
-    };
-    if (typeof expr.value === 'object' && 'next' in expr.value) {
-      token.next = expr.value.next;
-    }
-    token.type = expr.type;
-    token.raw = Utils.stringify(value, token.position, token.next);
+    token = new Token.Token({
+      ...expr,
+      type: expr.type,
+      value: { left: Token.clone(token), right: expr.value },
+      next: expr.value instanceof Token.Token ? expr.value.next : expr.next,
+      raw: Utils.stringify(value, token.position, token.next)
+    });
   }
 
-  if (token) {
-    return Lexer.tokenize({ ...token, value: token, type: 'CommonExpression' }, value);
-  }
+  return Token.tokenize({
+    ...token,
+    type: 'CommonExpression',
+    value: token,
+    source: value
+  });
 }
 
-export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
-  const token =
+export function boolCommonExpr(value: SourceArray, index: number): Token.IsOfExpressionToken | Token.MethodCallExpressionToken | Token.NotExpressionToken | Token.CommonExpressionToken | Token.BoolParenExpressionToken | Token.AndExpressionToken | Token.OrExpressionToken | undefined {
+  let token =
     isofExpr(value, index) ||
     boolMethodCallExpr(value, index) ||
     notExpr(value, index) ||
@@ -54,7 +56,7 @@ export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
     boolParenExpr(value, index);
 
   if (!token) {
-    return;
+    return undefined;
   }
 
   let commonMoreExpr = undefined;
@@ -69,129 +71,128 @@ export function boolCommonExpr(value: SourceArray, index: number): Lexer.Token {
       hasExpr(value, token.next);
 
     if (commonMoreExpr) {
-      token.value = {
-        left: token.value,
-        right: commonMoreExpr.value
-      };
-      token.next = commonMoreExpr.value.next;
-      token.type = commonMoreExpr.type;
-      token.raw = Utils.stringify(value, token.position, token.next);
+      token = new Token.Token({
+        ...token,
+        type: commonMoreExpr.type,
+        value: {
+          left: token.value,
+          right: commonMoreExpr.value
+        },
+        next: commonMoreExpr.value.next,
+        raw: Utils.stringify(value, token.position, token.next)
+      });
     }
   }
 
   const expr = andExpr(value, token.next) || orExpr(value, token.next);
 
-  if (expr) {
-    const left = Lexer.clone(token);
-    token.next = expr.value.next;
-    token.value = {
-      left,
-      right: expr.value
-    };
-    token.type = expr.type;
-    token.raw = Utils.stringify(value, token.position, token.next);
+  if (token && expr) {
+    token = new Token.Token({
+      ...token,
+      type: expr.type,
+      next: expr.value.next,
+      value: { left: Token.clone(token), right: expr.value },
+      raw: Utils.stringify(value, token.position, token.next)
+    });
 
     if (
       token.type === 'AndExpression' &&
       token.value.right.type === 'OrExpression'
     ) {
-      token.value.left = Lexer.tokenize(
-        {
-          type: token.type,
-          value: { left: token.value.left, right: token.value.right },
-          position: token.value.left.position,
-          next: token.value.right.value.left.next
-        },
-        value
-      );
-      return { ...token, type: token.value.right.type, value: token.value.right.value.right };
+      return Token.tokenize({
+        type: token.value.right.type,
+        value: { left: token.value.left, right: token.value.right },
+        position: token.value.left.position,
+        next: token.value.right.value.left.next,
+        source: value
+      });
     }
   }
 
   return token;
 }
 
-export function andExpr(value: SourceArray, index: number): Lexer.Token {
+export function andExpr(value: SourceArray, index: number): Token.AndExpressionToken | undefined {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'and')) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws + 3;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = boolCommonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    'AndExpression'
-  );
+  return Token.tokenize({ type: 'AndExpression', value: token, position: start, next: index, source: value });
 }
 
-export function orExpr(value: SourceArray, index: number): Lexer.Token {
+export function orExpr(value: SourceArray, index: number): Token.OrExpressionToken | undefined {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'or')) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws + 2;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = boolCommonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize({ ...token, value: token, type: 'OrExpression' }, value);
+  return Token.tokenize({ ...token, type: 'OrExpression', value: token, source: value });
 }
 
-export function leftRightExpr(
+export function leftRightExpr<T extends Token.TokenType>(
   value: SourceArray,
   index: number,
   expr: string,
-  tokenType: Lexer.TokenType
-): Lexer.Token {
+  tokenType: T
+): Token.LexerToken & { type: T } | undefined {
   let rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = rws;
   if (!Utils.equals(value, index, expr)) {
-    return;
+    return undefined;
   }
   index += expr.length;
   rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = commonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(value, start, index, token.value, tokenType);
+  return Token.tokenize({
+    type: tokenType,
+    value: token.value,
+    position: start,
+    next: index,
+    source: value
+  });
 }
-export function eqExpr(value: SourceArray, index: number): Lexer.Token {
+export function eqExpr(value: SourceArray, index: number): Token.EqualsExpressionToken | undefined {
   return leftRightExpr(value, index, 'eq', 'EqualsExpression');
 }
-export function neExpr(value: SourceArray, index: number): Lexer.Token {
+export function neExpr(value: SourceArray, index: number): Token.NotEqualsExpressionToken | undefined {
   return leftRightExpr(value, index, 'ne', 'NotEqualsExpression');
 }
-export function ltExpr(value: SourceArray, index: number): Lexer.Token {
+export function ltExpr(value: SourceArray, index: number): Token.LesserThanExpressionToken | undefined {
   return leftRightExpr(
     value,
     index,
@@ -199,7 +200,7 @@ export function ltExpr(value: SourceArray, index: number): Lexer.Token {
     'LesserThanExpression'
   );
 }
-export function leExpr(value: SourceArray, index: number): Lexer.Token {
+export function leExpr(value: SourceArray, index: number): Token.LesserOrEqualsExpressionToken | undefined {
   return leftRightExpr(
     value,
     index,
@@ -207,7 +208,7 @@ export function leExpr(value: SourceArray, index: number): Lexer.Token {
     'LesserOrEqualsExpression'
   );
 }
-export function gtExpr(value: SourceArray, index: number): Lexer.Token {
+export function gtExpr(value: SourceArray, index: number): Token.GreaterThanExpressionToken | undefined {
   return leftRightExpr(
     value,
     index,
@@ -215,7 +216,7 @@ export function gtExpr(value: SourceArray, index: number): Lexer.Token {
     'GreaterThanExpression'
   );
 }
-export function geExpr(value: SourceArray, index: number): Lexer.Token {
+export function geExpr(value: SourceArray, index: number): Token.GreaterOrEqualsExpressionToken | undefined {
   return leftRightExpr(
     value,
     index,
@@ -223,110 +224,92 @@ export function geExpr(value: SourceArray, index: number): Lexer.Token {
     'GreaterOrEqualsExpression'
   );
 }
-export function hasExpr(value: SourceArray, index: number): Lexer.Token {
+export function hasExpr(value: SourceArray, index: number): Token.HasExpressionToken | undefined {
   return leftRightExpr(value, index, 'has', 'HasExpression');
 }
 
-export function addExpr(value: SourceArray, index: number): Lexer.Token {
+export function addExpr(value: SourceArray, index: number): Token.AddExpressionToken | undefined {
   return leftRightExpr(value, index, 'add', 'AddExpression');
 }
-export function subExpr(value: SourceArray, index: number): Lexer.Token {
+export function subExpr(value: SourceArray, index: number): Token.SubExpressionToken | undefined {
   return leftRightExpr(value, index, 'sub', 'SubExpression');
 }
-export function mulExpr(value: SourceArray, index: number): Lexer.Token {
+export function mulExpr(value: SourceArray, index: number): Token.MulExpressionToken | undefined {
   return leftRightExpr(value, index, 'mul', 'MulExpression');
 }
-export function divExpr(value: SourceArray, index: number): Lexer.Token {
+export function divExpr(value: SourceArray, index: number): Token.DivExpressionToken | undefined {
   return leftRightExpr(value, index, 'div', 'DivExpression');
 }
-export function modExpr(value: SourceArray, index: number): Lexer.Token {
+export function modExpr(value: SourceArray, index: number): Token.ModExpressionToken | undefined {
   return leftRightExpr(value, index, 'mod', 'ModExpression');
 }
 
-export function notExpr(value: SourceArray, index: number): Lexer.Token {
+export function notExpr(value: SourceArray, index: number): Token.NotExpressionToken | undefined {
   if (!Utils.equals(value, index, 'not')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 3;
   const rws = Lexer.RWS(value, index);
   if (rws === index) {
-    return;
+    return undefined;
   }
   index = rws;
   const token = boolCommonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    token.next,
-    token,
-    'NotExpression'
-  );
+  return Token.tokenize({ type: 'NotExpression', value: token, position: start, next: token.next, source: value });
 }
 
-export function boolParenExpr(value: SourceArray, index: number): Lexer.Token {
+export function boolParenExpr(value: SourceArray, index: number): Token.BoolParenExpressionToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
   index = Lexer.BWS(value, index);
   const token = boolCommonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = Lexer.BWS(value, token.next);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    'BoolParenExpression'
-  );
+  return Token.tokenize({ type: 'BoolParenExpression', value: token, position: start, next: index, source: value });
 }
-export function parenExpr(value: SourceArray, index: number): Lexer.Token {
+export function parenExpr(value: SourceArray, index: number): Token.ParenExpressionToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
   index = Lexer.BWS(value, index);
   const token = commonExpr(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = Lexer.BWS(value, token.next);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token.value,
-    'ParenExpression'
-  );
+  return Token.tokenize({ type: 'ParenExpression', value: token.value, position: start, next: index, source: value });
 }
 
 export function boolMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return (
     endsWithMethodCallExpr(value, index) ||
     startsWithMethodCallExpr(value, index) ||
@@ -335,7 +318,7 @@ export function boolMethodCallExpr(
     intersectsMethodCallExpr(value, index)
   );
 }
-export function methodCallExpr(value: SourceArray, index: number): Lexer.Token {
+export function methodCallExpr(value: SourceArray, index: number): Token.MethodCallExpressionToken | undefined {
   return (
     indexOfMethodCallExpr(value, index) ||
     toLowerMethodCallExpr(value, index) ||
@@ -372,7 +355,7 @@ export function methodCallExprFactory(
   method: string,
   min?: number,
   max?: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   if (typeof min === 'undefined') {
     min = 0;
   }
@@ -381,30 +364,29 @@ export function methodCallExprFactory(
   }
 
   if (!Utils.equals(value, index, method)) {
-    return;
+    return undefined;
   }
   const start = index;
   index += method.length;
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   index = open;
   index = Lexer.BWS(value, index);
-  let parameters;
+  const parameters: Token.Token[] = [];
   if (min > 0) {
-    parameters = [];
     while (parameters.length < max) {
       const expr = commonExpr(value, index);
       if (parameters.length < min && !expr) {
-        return;
+        return undefined;
       } else if (expr) {
         parameters.push(expr.value);
         index = expr.next;
         index = Lexer.BWS(value, index);
         const comma = Lexer.COMMA(value, index);
         if (parameters.length < min && !comma) {
-          return;
+          return undefined;
         }
         if (comma) {
           index = comma;
@@ -420,227 +402,224 @@ export function methodCallExprFactory(
   index = Lexer.BWS(value, index);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      method,
-      parameters
-    },
-    'MethodCallExpression'
-  );
+  return Token.tokenize({
+    type: 'MethodCallExpression',
+    value: { method, parameters },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 export function containsMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'contains', 2);
 }
 export function startsWithMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'startswith', 2);
 }
 export function endsWithMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'endswith', 2);
 }
 export function matchesPatternMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'matchespattern', 2);
 }
 export function lengthMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'length', 1);
 }
 export function indexOfMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'indexof', 2);
 }
 export function substringMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'substring', 2, 3);
 }
 export function substringOfMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'substringof', 2);
 }
 export function toLowerMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'tolower', 1);
 }
 export function toUpperMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'toupper', 1);
 }
 export function trimMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'trim', 1);
 }
 export function concatMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'concat', 2);
 }
 
 export function yearMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'year', 1);
 }
 export function monthMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'month', 1);
 }
 export function dayMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'day', 1);
 }
 export function hourMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'hour', 1);
 }
 export function minuteMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'minute', 1);
 }
 export function secondMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'second', 1);
 }
 export function fractionalsecondsMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'fractionalseconds', 1);
 }
 export function totalsecondsMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'totalseconds', 1);
 }
 export function dateMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'date', 1);
 }
 export function timeMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'time', 1);
 }
 export function totalOffsetMinutesMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'totaloffsetminutes', 1);
 }
 
 export function minDateTimeMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'mindatetime', 0);
 }
 export function maxDateTimeMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'maxdatetime', 0);
 }
 export function nowMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'now', 0);
 }
 
 export function roundMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'round', 1);
 }
 export function floorMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'floor', 1);
 }
 export function ceilingMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'ceiling', 1);
 }
 
 export function distanceMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'geo.distance', 2);
 }
 export function geoLengthMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'geo.length', 1);
 }
 export function intersectsMethodCallExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.MethodCallExpressionToken | undefined {
   return methodCallExprFactory(value, index, 'geo.intersects', 2);
 }
 
-export function isofExpr(value: SourceArray, index: number): Lexer.Token {
+export function isofExpr(value: SourceArray, index: number): Token.IsOfExpressionToken | undefined {
   if (!Utils.equals(value, index, 'isof')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 4;
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   index = open;
   index = Lexer.BWS(value, index);
@@ -650,43 +629,34 @@ export function isofExpr(value: SourceArray, index: number): Lexer.Token {
     index = Lexer.BWS(value, index);
     const comma = Lexer.COMMA(value, index);
     if (!comma) {
-      return;
+      return undefined;
     }
     index = comma;
     index = Lexer.BWS(value, index);
   }
   const typeName = NameOrIdentifier.qualifiedTypeName(value, index);
   if (!typeName) {
-    return;
+    return undefined;
   }
   index = typeName.next;
   index = Lexer.BWS(value, index);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      target: expr,
-      typename: typeName
-    },
-    'IsOfExpression'
-  );
+  return Token.tokenize({ type: 'IsOfExpression', value: { target: expr, typename: typeName }, position: start, next: index, source: value });
 }
-export function castExpr(value: SourceArray, index: number): Lexer.Token {
+export function castExpr(value: SourceArray, index: number): Token.CastExpressionToken | undefined {
   if (!Utils.equals(value, index, 'cast')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 4;
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   index = open;
   index = Lexer.BWS(value, index);
@@ -696,104 +666,77 @@ export function castExpr(value: SourceArray, index: number): Lexer.Token {
     index = Lexer.BWS(value, index);
     const comma = Lexer.COMMA(value, index);
     if (!comma) {
-      return;
+      return undefined;
     }
     index = comma;
     index = Lexer.BWS(value, index);
   }
   const typeName = NameOrIdentifier.qualifiedTypeName(value, index);
   if (!typeName) {
-    return;
+    return undefined;
   }
   index = typeName.next;
   index = Lexer.BWS(value, index);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      target: expr,
-      typename: typeName
-    },
-    'CastExpression'
-  );
+  return Token.tokenize({ type: 'CastExpression', value: { target: expr, typename: typeName }, position: start, next: index, source: value });
 }
 
-export function negateExpr(value: SourceArray, index: number): Lexer.Token {
+export function negateExpr(value: SourceArray, index: number): Token.NegateExpressionToken | undefined {
   if (value[index] !== 0x2d) {
-    return;
+    return undefined;
   }
   const start = index;
   index++;
   index = Lexer.BWS(value, index);
   const expr = commonExpr(value, index);
   if (!expr) {
-    return;
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    expr.next,
-    expr,
-    'NegateExpression'
-  );
+  return Token.tokenize({ type: 'NegateExpression', value: expr, position: start, next: expr.next, source: value });
 }
 
 export function firstMemberExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
-  let token = inscopeVariableExpr(value, index);
-  let member;
+): Token.FirstMemberExpressionToken | undefined {
+  const token = inscopeVariableExpr(value, index);
+  let member: Token.MemberExpressionToken | undefined;
   const start = index;
 
   if (token) {
     if (value[token.next] === 0x2f) {
       index = token.next + 1;
-      member = memberExpr(value, index);
+      const member = memberExpr(value, index);
       if (!member) {
-        return;
+        return undefined;
       }
 
-      return Lexer.tokenize(
-        value,
-        start,
-        member.next,
-        [token, member],
-        'FirstMemberExpression'
-      );
+      return Token.tokenize({ type: 'FirstMemberExpression', value: [token, member], position: start, next: member.next, source: value });
     }
   } else {
     member = memberExpr(value, index);
   }
 
-  token = token || member;
-  if (!token) {
-    return;
+  const newToken = token || member;
+  if (!newToken) {
+    return undefined;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    token.next,
-    token,
-    'FirstMemberExpression'
-  );
+  return Token.tokenize({ type: 'FirstMemberExpression', value: newToken, position: start, next: newToken.next, source: value });
 }
-export function memberExpr(value: SourceArray, index: number): Lexer.Token {
+export function memberExpr(value: SourceArray, index: number): Token.MemberExpressionToken | undefined {
   const start = index;
   const token = NameOrIdentifier.qualifiedEntityTypeName(value, index);
 
   if (token) {
     if (value[token.next] !== 0x2f) {
-      return;
+      return undefined;
     }
     index = token.next + 1;
   }
@@ -802,21 +745,21 @@ export function memberExpr(value: SourceArray, index: number): Lexer.Token {
     propertyPathExpr(value, index) || boundFunctionExpr(value, index);
 
   if (!next) {
-    return;
+    return undefined;
   }
-  return Lexer.tokenize(
-    value,
-    start,
-    next.next,
-    token ? { name: token, value: next } : next,
-    'MemberExpression'
-  );
+  return Token.tokenize({
+    type: 'MemberExpression',
+    value: token ? { name: token, value: next } : next,
+    position: start,
+    next: next.next,
+    source: value
+  });
 }
 export function propertyPathExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
-  let token: any = NameOrIdentifier.odataIdentifier(value, index);
+): Token.PropertyPathExpressionToken | undefined {
+  let token = NameOrIdentifier.odataIdentifier(value, index);
   const start = index;
   if (token) {
     index = token.next;
@@ -830,7 +773,7 @@ export function propertyPathExpr(
     if (nav) {
       index = nav.next;
       token = {
-        current: Lexer.clone(token),
+        current: Token.clone(token),
         next: nav
       };
     }
@@ -842,22 +785,16 @@ export function propertyPathExpr(
   }
 
   if (!token) {
-    return;
+    return undefined;
   }
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    'PropertyPathExpression'
-  );
+  return Token.tokenize({ type: 'PropertyPathExpression', value: token, position: start, next: index, source: value });
 }
 
 let isLambdaPredicate = false;
 export function inscopeVariableExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ImplicitVariableExpressionToken | Token.LambdaVariableExpressionToken | undefined {
   return (
     implicitVariableExpr(value, index) ||
     (isLambdaPredicate ? lambdaVariableExpr(value, index) : undefined)
@@ -867,22 +804,16 @@ export function inscopeVariableExpr(
 export function implicitVariableExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ImplicitVariableExpressionToken | undefined {
   if (Utils.equals(value, index, '$it')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 3,
-      '$it',
-      Lexer.TokenType.ImplicitVariableExpression
-    );
+    return Token.tokenize({ type: 'ImplicitVariableExpression', value: '$it', position: index, next: index + 3, source: value });
   }
 }
 let hasLambdaVariableExpr = false;
 export function lambdaVariableExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.LambdaVariableExpressionToken | undefined {
   const token = NameOrIdentifier.odataIdentifier(
     value,
     index,
@@ -896,30 +827,24 @@ export function lambdaVariableExpr(
 export function lambdaPredicateExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.LambdaPredicateExpressionToken | undefined {
   isLambdaPredicate = true;
   const token = boolCommonExpr(value, index);
   isLambdaPredicate = false;
   if (token && hasLambdaVariableExpr) {
     hasLambdaVariableExpr = false;
-    return Lexer.tokenize(
-      value,
-      token.position,
-      token.next,
-      token,
-      'LambdaPredicateExpression'
-    );
+    return Token.tokenize({ type: 'LambdaPredicateExpression', value: token, position: token.position, next: token.next, source: value });
   }
 }
-export function anyExpr(value: SourceArray, index: number): Lexer.Token {
+export function anyExpr(value: SourceArray, index: number): Token.AnyExpressionToken | undefined {
   if (!Utils.equals(value, index, 'any')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 3;
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   index = open;
   index = Lexer.BWS(value, index);
@@ -930,51 +855,42 @@ export function anyExpr(value: SourceArray, index: number): Lexer.Token {
     index = Lexer.BWS(value, index);
     const colon = Lexer.COLON(value, index);
     if (!colon) {
-      return;
+      return undefined;
     }
     index = colon;
     index = Lexer.BWS(value, index);
     predicate = lambdaPredicateExpr(value, index);
     if (!predicate) {
-      return;
+      return undefined;
     }
     index = predicate.next;
   }
   index = Lexer.BWS(value, index);
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      variable,
-      predicate
-    },
-    'AnyExpression'
-  );
+  return Token.tokenize({ type: 'AnyExpression', value: { variable, predicate }, position: start, next: index, source: value });
 }
-export function allExpr(value: SourceArray, index: number): Lexer.Token {
+export function allExpr(value: SourceArray, index: number): Token.AllExpressionToken | undefined {
   if (!Utils.equals(value, index, 'all')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 3;
 
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   index = open;
 
   index = Lexer.BWS(value, index);
   const variable = lambdaVariableExpr(value, index);
   if (!variable) {
-    return;
+    return undefined;
   }
   index = variable.next;
 
@@ -982,7 +898,7 @@ export function allExpr(value: SourceArray, index: number): Lexer.Token {
 
   const colon = Lexer.COLON(value, index);
   if (!colon) {
-    return;
+    return undefined;
   }
   index = colon;
 
@@ -990,7 +906,7 @@ export function allExpr(value: SourceArray, index: number): Lexer.Token {
 
   const predicate = lambdaPredicateExpr(value, index);
   if (!predicate) {
-    return;
+    return undefined;
   }
   index = predicate.next;
 
@@ -998,33 +914,24 @@ export function allExpr(value: SourceArray, index: number): Lexer.Token {
 
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      variable,
-      predicate
-    },
-    'AllExpression'
-  );
+  return Token.tokenize({ type: 'AllExpression', value: { variable, predicate }, position: start, next: index, source: value });
 }
 
 export function collectionNavigationExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.CollectionNavigationExpressionToken | undefined {
   const start = index;
   let entity, navigation, path;
   if (value[index] === 0x2f) {
     index++;
     entity = NameOrIdentifier.qualifiedEntityTypeName(value, index);
     if (!entity) {
-      return;
+      return undefined;
     }
     index = entity.next;
   }
@@ -1045,142 +952,130 @@ export function collectionNavigationExpr(
   }
 
   if (index > start) {
-    return Lexer.tokenize(
-      value,
-      start,
-      index,
-      {
-        entity,
-        predicate,
-        navigation,
-        path
-      },
-      'CollectionNavigationExpression'
-    );
+    return Token.tokenize({
+      type: 'CollectionNavigationExpression',
+      value: { entity, predicate, navigation, path },
+      position: start,
+      next: index,
+      source: value
+    });
   }
 }
 export function keyPredicate(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.SimpleKeyToken | Token.CompoundKeyToken | undefined {
   return simpleKey(value, index, metadataContext) || compoundKey(value, index);
 }
 export function simpleKey(
   value: SourceArray,
   index: number,
   metadataContext?: any
-): Lexer.Token {
+): Token.SimpleKeyToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
 
   const token = keyPropertyValue(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
 
   const close = Lexer.CLOSE(value, token.next);
   if (!close) {
-    return;
+    return undefined;
   }
 
-  let key;
-  if (
-    typeof metadataContext === 'object' &&
-    metadataContext.key &&
-    metadataContext.key.propertyRefs &&
-    metadataContext.key.propertyRefs[0] &&
-    metadataContext.key.propertyRefs[0].name
-  ) {
-    key = metadataContext.key.propertyRefs[0].name;
-  }
+  const key = String(metadataContext?.key?.propertyRefs?.[0]?.[0].name ?? '');
 
-  return Lexer.tokenize(
-    value,
-    start,
-    close,
-    { key, value: token },
-    'SimpleKey'
-  );
+  return Token.tokenize({
+    type: 'SimpleKey',
+    value: { key, value: token },
+    position: start,
+    next: close,
+    source: value
+  });
 }
-export function compoundKey(value: SourceArray, index: number): Lexer.Token {
+export function compoundKey(value: SourceArray, index: number): Token.CompoundKeyToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
 
-  let pair = keyValuePair(value, index);
+  let pair: Token.KeyValuePairToken | undefined = keyValuePair(value, index);
   if (!pair) {
-    return;
+    return undefined;
   }
 
-  const keys = [];
+  const keys: Token.KeyValuePairToken[] = [];
   while (pair) {
     keys.push(pair);
     const comma = Lexer.COMMA(value, pair.next);
     if (comma) {
       pair = keyValuePair(value, comma);
     } else {
-      pair = null;
+      pair = undefined;
     }
   }
 
   index = keys[keys.length - 1].next;
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(value, start, index, keys, 'CompoundKey');
+  return Token.tokenize({
+    type: 'CompoundKey',
+    value: keys,
+    position: start,
+    next: index,
+    source: value
+  });
 }
-export function keyValuePair(value: SourceArray, index: number): Lexer.Token {
+export function keyValuePair(value: SourceArray, index: number): Token.KeyValuePairToken | undefined {
   const prop =
     NameOrIdentifier.primitiveKeyProperty(value, index) ||
     keyPropertyAlias(value, index);
 
   if (!prop) {
-    return;
+    return undefined;
   }
   const eq = Lexer.EQ(value, prop.next);
   if (!eq) {
-    return;
+    return undefined;
   }
 
   const val = keyPropertyValue(value, eq);
   if (val) {
-    return Lexer.tokenize(
-      value,
-      index,
-      val.next,
-      {
-        key: prop,
-        value: val
-      },
-      'KeyValuePair'
-    );
+    return Token.tokenize({
+      type: 'KeyValuePair',
+      value: { key: prop, value: val },
+      position: index,
+      next: val.next,
+      source: value
+    });
   }
 }
 export function keyPropertyValue(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.KeyPropertyValueToken | undefined {
   const token = PrimitiveLiteral.primitiveLiteral(value, index);
   if (token) {
-    token.type = 'KeyPropertyValue';
-    return token;
+    return Token.clone({ ...token, type: 'KeyPropertyValue' });
   }
 }
 export function keyPropertyAlias(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.KeyPropertyAliasToken | undefined {
   return NameOrIdentifier.odataIdentifier(
     value,
     index,
@@ -1191,26 +1086,26 @@ export function keyPropertyAlias(
 export function singleNavigationExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.SingleNavigationExpressionToken | undefined {
   if (value[index] !== 0x2f) {
-    return;
+    return undefined;
   }
   const member = memberExpr(value, index + 1);
   if (member) {
-    return Lexer.tokenize(
-      value,
-      index,
-      member.next,
-      member,
-      'SingleNavigationExpression'
-    );
+    return Token.tokenize({
+      type: 'SingleNavigationExpression',
+      value: member,
+      position: index,
+      next: member.next,
+      source: value
+    });
   }
 }
 export function collectionPathExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
-  let token = countExpr(value, index);
+): Token.CollectionPathExpressionToken | undefined {
+  let token: Token.CountExpressionToken | Token.FunctionExpressionToken | Token.AnyExpressionToken | Token.AllExpressionToken | undefined = countExpr(value, index);
   if (!token) {
     if (value[index] === 0x2f) {
       token =
@@ -1221,28 +1116,28 @@ export function collectionPathExpr(
   }
 
   if (token) {
-    return Lexer.tokenize(
-      value,
-      index,
-      token.next,
-      token,
-      'CollectionPathExpression'
-    );
+    return Token.tokenize({
+      type: 'CollectionPathExpression',
+      value: token,
+      position: index,
+      next: token.next,
+      source: value
+    });
   }
 }
 export function complexPathExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ComplexPathExpressionToken | undefined {
   if (value[index] !== 0x2f) {
-    return;
+    return undefined;
   }
   const start = index;
   index++;
   const token = NameOrIdentifier.qualifiedComplexTypeName(value, index);
   if (token) {
     if (value[token.next] !== 0x2f) {
-      return;
+      return undefined;
     }
     index = token.next + 1;
   }
@@ -1251,34 +1146,34 @@ export function complexPathExpr(
     propertyPathExpr(value, index) || boundFunctionExpr(value, index);
 
   if (expr) {
-    return Lexer.tokenize(
-      value,
-      start,
-      expr.next,
-      token ? [token, expr] : [expr],
-      'ComplexPathExpression'
-    );
+    return Token.tokenize({
+      type: 'ComplexPathExpression',
+      value: token ? [token, expr] : [expr],
+      position: start,
+      next: expr.next,
+      source: value
+    });
   }
 }
-export function singlePathExpr(value: SourceArray, index: number): Lexer.Token {
+export function singlePathExpr(value: SourceArray, index: number): Token.SinglePathExpressionToken | undefined {
   if (value[index] !== 0x2f) {
-    return;
+    return undefined;
   }
   const boundFunction = boundFunctionExpr(value, index + 1);
   if (boundFunction) {
-    return Lexer.tokenize(
-      value,
-      index,
-      boundFunction.next,
-      boundFunction,
-      'SinglePathExpression'
-    );
+    return Token.tokenize({
+      type: 'SinglePathExpression',
+      value: boundFunction,
+      position: index,
+      next: boundFunction.next,
+      source: value
+    });
   }
 }
-export function functionExpr(value: SourceArray, index: number): Lexer.Token {
+export function functionExpr(value: SourceArray, index: number): Token.FunctionExpressionToken | undefined {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
-    return;
+    return undefined;
   }
   const start = index;
   index = namespaceNext + 1;
@@ -1286,7 +1181,7 @@ export function functionExpr(value: SourceArray, index: number): Lexer.Token {
   const token = NameOrIdentifier.odataIdentifier(value, index);
 
   if (!token) {
-    return;
+    return undefined;
   }
   token.position = start;
   token.value.namespace = Utils.stringify(value, start, namespaceNext);
@@ -1296,7 +1191,7 @@ export function functionExpr(value: SourceArray, index: number): Lexer.Token {
   const params = functionExprParameters(value, index);
 
   if (!params) {
-    return;
+    return undefined;
   }
 
   index = params.next;
@@ -1311,32 +1206,28 @@ export function functionExpr(value: SourceArray, index: number): Lexer.Token {
     index = expr.next;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      fn: token,
-      params,
-      expression: expr
-    },
-    'FunctionExpression'
-  );
+  return Token.tokenize({
+    type: 'FunctionExpression',
+    value: { fn: token, params, expression: expr },
+    position: start,
+    next: index,
+    source: value
+  });
 }
 export function boundFunctionExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.FunctionExpressionToken | undefined {
   return functionExpr(value, index);
 }
 
 export function functionExprParameters(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.FunctionExpressionParametersToken | undefined {
   const open = Lexer.OPEN(value, index);
   if (!open) {
-    return;
+    return undefined;
   }
   const start = index;
   index = open;
@@ -1350,39 +1241,39 @@ export function functionExprParameters(
       index = comma;
       expr = functionExprParameter(value, index);
       if (!expr) {
-        return;
+        return undefined;
       }
     } else {
       index = expr.next;
-      expr = null;
+      expr = undefined;
     }
   }
 
   const close = Lexer.CLOSE(value, index);
   if (!close) {
-    return;
+    return undefined;
   }
   index = close;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    params,
-    'FunctionExpressionParameters'
-  );
+  return Token.tokenize({
+    type: 'FunctionExpressionParameters',
+    value: params,
+    position: start,
+    next: index,
+    source: value
+  });
 }
 export function functionExprParameter(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.FunctionExpressionParameterToken | undefined {
   const name = parameterName(value, index);
   if (!name) {
-    return;
+    return undefined;
   }
   const eq = Lexer.EQ(value, name.next);
   if (!name || !eq) {
-    return;
+    return undefined;
   }
 
   const start = index;
@@ -1391,131 +1282,122 @@ export function functionExprParameter(
   const param = parameterAlias(value, index) || parameterValue(value, index);
 
   if (!param) {
-    return;
+    return undefined;
   }
-  return Lexer.tokenize(
-    value,
-    start,
-    param.next,
-    {
-      name,
-      value: param
-    },
-    'FunctionExpressionParameter'
-  );
+  return Token.tokenize({
+    type: 'FunctionExpressionParameter',
+    value: { name, value: param },
+    position: start,
+    next: param.next,
+    source: value
+  });
 }
-export function parameterName(value: SourceArray, index: number): Lexer.Token {
+export function parameterName(value: SourceArray, index: number): Token.ParameterNameToken | undefined {
   return NameOrIdentifier.odataIdentifier(
     value,
     index,
     'ParameterName'
   );
 }
-export function parameterAlias(value: SourceArray, index: number): Lexer.Token {
+export function parameterAlias(value: SourceArray, index: number): Token.ParameterAliasToken | undefined {
   const at = Lexer.AT(value, index);
   if (!at) {
-    return;
+    return undefined;
   }
   const id = NameOrIdentifier.odataIdentifier(value, at);
   if (id) {
-    return Lexer.tokenize(
-      value,
-      index,
-      id.next,
-      id.value,
-      'ParameterAlias'
-    );
+    return Token.tokenize({
+      type: 'ParameterAlias',
+      value: id.value,
+      position: index,
+      next: id.next,
+      source: value
+    });
   }
 }
-export function parameterValue(value: SourceArray, index: number): Lexer.Token {
+export function parameterValue(value: SourceArray, index: number): Token.ParameterValueToken | undefined {
   const token =
     ArrayOrObject.arrayOrObject(value, index) || commonExpr(value, index);
   if (token) {
-    return Lexer.tokenize(
-      value,
-      index,
-      token.next,
-      token.value,
-      'ParameterValue'
-    );
+    return Token.tokenize({
+      type: 'ParameterValue',
+      value: token.value,
+      position: index,
+      next: token.next,
+      source: value
+    });
   }
 }
 
-export function countExpr(value: SourceArray, index: number): Lexer.Token {
+export function countExpr(value: SourceArray, index: number): Token.CountExpressionToken | undefined {
   if (Utils.equals(value, index, '/$count')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 7,
-      '/$count',
-      'CountExpression'
-    );
+    return Token.tokenize({
+      type: 'CountExpression',
+      value: '/$count',
+      position: index,
+      next: index + 7,
+      source: value
+    });
   }
 }
-export function refExpr(value: SourceArray, index: number): Lexer.Token {
+export function refExpr(value: SourceArray, index: number): Token.RefExpressionToken | undefined {
   if (Utils.equals(value, index, '/$ref')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 5,
-      '/$ref',
-      'RefExpression'
-    );
+    return Token.tokenize({
+      type: 'RefExpression',
+      value: '/$ref',
+      position: index,
+      next: index + 5,
+      source: value
+    });
   }
 }
-export function valueExpr(value: SourceArray, index: number): Lexer.Token {
+export function valueExpr(value: SourceArray, index: number): Token.ValueExpressionToken | undefined {
   if (Utils.equals(value, index, '/$value')) {
-    return Lexer.tokenize(
-      value,
-      index,
-      index + 7,
-      '/$value',
-      'ValueExpression'
-    );
+    return Token.tokenize({
+      type: 'ValueExpression',
+      value: '/$value',
+      position: index,
+      next: index + 7,
+      source: value
+    });
   }
 }
 
-export function rootExpr(value: SourceArray, index: number): Lexer.Token {
+export function rootExpr(value: SourceArray, index: number): Token.RootExpressionToken | undefined {
   if (!Utils.equals(value, index, '$root/')) {
-    return;
+    return undefined;
   }
   const start = index;
   index += 6;
 
   const entitySet = NameOrIdentifier.entitySetName(value, index);
-  let predicate, entity, token;
+  let predicate: Token.SimpleKeyToken | Token.CompoundKeyToken | undefined,
+    entity: Token.SingletonEntityToken | undefined,
+    token;
   if (entitySet) {
     predicate = keyPredicate(value, entitySet.next);
   }
   if (!(entitySet && predicate)) {
     entity = NameOrIdentifier.singletonEntity(value, index);
     if (!entity) {
-      return;
+      return undefined;
     }
-    token = {
-      entity
-    };
+    token = { entity };
   } else {
-    token = {
-      entitySet,
-      keys: predicate
-    };
+    token = { entitySet, keys: predicate };
   }
 
-  index = (predicate || entity).next;
+  index = (predicate || entity)!.next;
   const nav = singleNavigationExpr(value, index);
   if (nav) {
     index = nav.next;
   }
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    {
-      current: token,
-      next: nav
-    },
-    'RootExpression'
-  );
+  return Token.tokenize({
+    type: 'RootExpression',
+    value: { current: token, next: nav },
+    position: start,
+    next: index,
+    source: value
+  });
 }

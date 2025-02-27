@@ -2,15 +2,16 @@ import * as Expressions from './expressions';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import * as Token from './token';
 import Utils, { SourceArray } from './utils';
 
 export function complexColInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ArrayToken | undefined {
   const begin = Lexer.beginArray(value, index);
   if (begin === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = begin;
@@ -29,20 +30,20 @@ export function complexColInUri(
       } else {
         const separator = Lexer.valueSeparator(value, index);
         if (separator === index) {
-          return;
+          return undefined;
         }
         index = separator;
 
         token = complexInUri(value, index);
         if (!token) {
-          return;
+          return undefined;
         }
       }
     }
   } else {
     const end = Lexer.endArray(value, index);
     if (end === index) {
-      return;
+      return undefined;
     }
     index = end;
   }
@@ -50,10 +51,10 @@ export function complexColInUri(
   return Lexer.tokenize(value, start, index, { items }, 'Array');
 }
 
-export function complexInUri(value: SourceArray, index: number): Lexer.Token {
+export function complexInUri(value: SourceArray, index: number): Token.ObjectToken | undefined {
   const begin = Lexer.beginObject(value, index);
   if (begin === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = begin;
@@ -77,7 +78,7 @@ export function complexInUri(value: SourceArray, index: number): Lexer.Token {
       } else {
         const separator = Lexer.valueSeparator(value, index);
         if (separator === index) {
-          return;
+          return undefined;
         }
         index = separator;
 
@@ -88,14 +89,14 @@ export function complexInUri(value: SourceArray, index: number): Lexer.Token {
           collectionPropertyInUri(value, index) ||
           navigationPropertyInUri(value, index);
         if (!token) {
-          return;
+          return undefined;
         }
       }
     }
   } else {
     const end = Lexer.endObject(value, index);
     if (end === index) {
-      return;
+      return undefined;
     }
     index = end;
   }
@@ -106,10 +107,10 @@ export function complexInUri(value: SourceArray, index: number): Lexer.Token {
 export function collectionPropertyInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
@@ -119,19 +120,19 @@ export function collectionPropertyInUri(
     NameOrIdentifier.complexColProperty(value, index);
 
   if (!prop) {
-    return;
+    return undefined;
   }
   index = prop.next;
 
   mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   index = mark;
 
   const separator = Lexer.nameSeparator(value, index);
   if (separator === index) {
-    return;
+    return undefined;
   }
   index = separator;
 
@@ -141,7 +142,7 @@ export function collectionPropertyInUri(
       : complexColInUri(value, index);
 
   if (!propValue) {
-    return;
+    return undefined;
   }
   index = propValue.next;
 
@@ -157,10 +158,10 @@ export function collectionPropertyInUri(
 export function primitiveColInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.ArrayToken | undefined {
   const begin = Lexer.beginArray(value, index);
   if (begin === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = begin;
@@ -179,20 +180,20 @@ export function primitiveColInUri(
       } else {
         const separator = Lexer.valueSeparator(value, index);
         if (separator === index) {
-          return;
+          return undefined;
         }
         index = separator;
 
         token = primitiveLiteralInJSON(value, index);
         if (!token) {
-          return;
+          return undefined;
         }
       }
     }
   } else {
     const end = Lexer.endArray(value, index);
     if (end === index) {
-      return;
+      return undefined;
     }
     index = end;
   }
@@ -203,35 +204,35 @@ export function primitiveColInUri(
 export function complexPropertyInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
 
   const prop = NameOrIdentifier.complexProperty(value, index);
   if (!prop) {
-    return;
+    return undefined;
   }
   index = prop.next;
 
   mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   index = mark;
 
   const separator = Lexer.nameSeparator(value, index);
   if (separator === index) {
-    return;
+    return undefined;
   }
   index = separator;
 
   const propValue = complexInUri(value, index);
   if (!propValue) {
-    return;
+    return undefined;
   }
   index = propValue.next;
 
@@ -247,47 +248,47 @@ export function complexPropertyInUri(
 export function annotationInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.AnnotationToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
 
   const at = Lexer.AT(value, index);
   if (!at) {
-    return;
+    return undefined;
   }
   index = at;
 
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index) {
-    return;
+    return undefined;
   }
   const namespaceStart = index;
   index = namespaceNext;
 
   if (value[index] !== 0x2e) {
-    return;
+    return undefined;
   }
   index++;
 
   const term = NameOrIdentifier.termName(value, index);
   if (!term) {
-    return;
+    return undefined;
   }
   index = term.next;
 
   mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   index = mark;
 
   const separator = Lexer.nameSeparator(value, index);
   if (separator === index) {
-    return;
+    return undefined;
   }
   index = separator;
 
@@ -297,7 +298,7 @@ export function annotationInUri(
     primitiveLiteralInJSON(value, index) ||
     primitiveColInUri(value, index);
   if (!token) {
-    return;
+    return undefined;
   }
   index = token.next;
 
@@ -320,35 +321,35 @@ export function keyValuePairInUri(
   index: number,
   keyFn: Function,
   valueFn: Function
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
 
   const prop = keyFn(value, index);
   if (!prop) {
-    return;
+    return undefined;
   }
   index = prop.next;
 
   mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   index = mark;
 
   const separator = Lexer.nameSeparator(value, index);
   if (separator === index) {
-    return;
+    return undefined;
   }
   index = separator;
 
   const propValue = valueFn(value, index);
   if (!propValue) {
-    return;
+    return undefined;
   }
   index = propValue.next;
 
@@ -364,7 +365,7 @@ export function keyValuePairInUri(
 export function primitivePropertyInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   return keyValuePairInUri(
     value,
     index,
@@ -376,7 +377,7 @@ export function primitivePropertyInUri(
 export function navigationPropertyInUri(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   return (
     singleNavPropInJSON(value, index) || collectionNavPropInJSON(value, index)
   );
@@ -385,7 +386,7 @@ export function navigationPropertyInUri(
 export function singleNavPropInJSON(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   return keyValuePairInUri(
     value,
     index,
@@ -397,7 +398,7 @@ export function singleNavPropInJSON(
 export function collectionNavPropInJSON(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.PropertyToken | undefined {
   return keyValuePairInUri(
     value,
     index,
@@ -406,10 +407,10 @@ export function collectionNavPropInJSON(
   );
 }
 
-export function rootExprCol(value: SourceArray, index: number): Lexer.Token {
+export function rootExprCol(value: SourceArray, index: number): Token.ArrayToken | undefined {
   const begin = Lexer.beginArray(value, index);
   if (begin === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = begin;
@@ -428,20 +429,20 @@ export function rootExprCol(value: SourceArray, index: number): Lexer.Token {
       } else {
         const separator = Lexer.valueSeparator(value, index);
         if (separator === index) {
-          return;
+          return undefined;
         }
         index = separator;
 
         token = Expressions.rootExpr(value, index);
         if (!token) {
-          return;
+          return undefined;
         }
       }
     }
   } else {
     const end = Lexer.endArray(value, index);
     if (end === index) {
-      return;
+      return undefined;
     }
     index = end;
   }
@@ -452,7 +453,7 @@ export function rootExprCol(value: SourceArray, index: number): Lexer.Token {
 export function primitiveLiteralInJSON(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Token.LiteralToken | undefined {
   return (
     stringInJSON(value, index) ||
     numberInJSON(value, index) ||
@@ -461,10 +462,10 @@ export function primitiveLiteralInJSON(
   );
 }
 
-export function stringInJSON(value: SourceArray, index: number): Lexer.Token {
+export function stringInJSON(value: SourceArray, index: number): Token.LiteralToken | undefined {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   const start = index;
   index = mark;
@@ -477,7 +478,7 @@ export function stringInJSON(value: SourceArray, index: number): Lexer.Token {
 
   mark = Lexer.quotationMark(value, index);
   if (mark === index) {
-    return;
+    return undefined;
   }
   index = mark;
 
@@ -522,7 +523,7 @@ export function charInJSON(value: SourceArray, index: number): number {
   }
 }
 
-export function numberInJSON(value: SourceArray, index: number): Lexer.Token {
+export function numberInJSON(value: SourceArray, index: number): Token.LiteralToken | undefined {
   const token =
     PrimitiveLiteral.doubleValue(value, index) ||
     PrimitiveLiteral.int64Value(value, index);
@@ -532,7 +533,7 @@ export function numberInJSON(value: SourceArray, index: number): Lexer.Token {
   }
 }
 
-export function booleanInJSON(value: SourceArray, index: number): Lexer.Token {
+export function booleanInJSON(value: SourceArray, index: number): Token.LiteralToken | undefined {
   if (Utils.equals(value, index, 'true')) {
     return Lexer.tokenize(
       value,
@@ -553,7 +554,7 @@ export function booleanInJSON(value: SourceArray, index: number): Lexer.Token {
   }
 }
 
-export function nullInJSON(value: SourceArray, index: number): Lexer.Token {
+export function nullInJSON(value: SourceArray, index: number): Token.LiteralToken | undefined {
   if (Utils.equals(value, index, 'null')) {
     return Lexer.tokenize(
       value,
@@ -565,7 +566,7 @@ export function nullInJSON(value: SourceArray, index: number): Lexer.Token {
   }
 }
 
-export function arrayOrObject(value: SourceArray, index: number): Lexer.Token {
+export function arrayOrObject(value: SourceArray, index: number): Token.ArrayOrObjectToken | undefined {
   const token =
     complexColInUri(value, index) ||
     complexInUri(value, index) ||
