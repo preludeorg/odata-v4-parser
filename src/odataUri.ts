@@ -6,8 +6,8 @@ import { SourceArray } from './utils';
 export function odataUri(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ODataUri> {
   let resource = ResourcePath.resourcePath(value, index, metadataContext);
   while (!resource && index < value.length) {
     while (value[++index] !== 0x2f && index < value.length) {}
@@ -36,6 +36,6 @@ export function odataUri(
     index,
     { resource, query },
     Lexer.TokenType.ODataUri,
-    <any>{ metadata: metadataContext }
+    <{ metadata: Lexer.MetadataContext }>{ metadata: metadataContext }
   );
 }

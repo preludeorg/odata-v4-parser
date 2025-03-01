@@ -1,13 +1,5 @@
 import { map } from '@newdash/newdash/map';
 import { Token, TokenType } from './lexer';
-import {
-  CustomQueryOptionToken,
-  ExpandToken,
-  FormatToken,
-  SearchToken,
-  SkipToken,
-  TopToken
-} from './token';
 import { createTraverser } from './visitor';
 
 export type SourceArray = number[] | Uint16Array;
@@ -57,15 +49,25 @@ export function required(
   return i >= (min || 0) && i <= max ? index + i : 0;
 }
 
-export function isType(
-  node: Token,
-  type: TokenType.CustomQueryOption
-): node is CustomQueryOptionToken;
-export function isType(node: Token, type: TokenType.Skip): node is SkipToken;
-export function isType(node: Token, type: TokenType.Top): node is TopToken;
-export function isType(node: Token, type: TokenType): boolean {
+export function isType<T extends TokenType>(
+  node: Token<any>,
+  type: T
+): node is Token<T> {
   return node?.type == type;
 }
+
+export function assertType<T extends TokenType>(
+  token: any,
+  tokenType: T
+): asserts token is Token<T> {
+  if (!(token instanceof Token) || !isType(token, tokenType)) {
+    const received = token instanceof Token
+      ? `token of type ${token.type}`
+      : `object: ${JSON.stringify(token)}`;
+    throw new Error(`Expected token of type ${tokenType}, received ${received}`);
+  }
+}
+
 
 /**
  * find one node in ast node by type
@@ -73,16 +75,10 @@ export function isType(node: Token, type: TokenType): boolean {
  * @param node
  * @param type
  */
-export function findOne(node: Token, type: TokenType.Top): TopToken;
-export function findOne(node: Token, type: TokenType.Skip): SkipToken;
-export function findOne(node: Token, type: TokenType.Expand): ExpandToken;
-export function findOne(node: Token, type: TokenType.Format): FormatToken;
-export function findOne(node: Token, type: TokenType.Search): SearchToken;
-export function findOne(node: Token, type: TokenType): Token;
-export function findOne(node: Token, type: any): Token {
-  let rt: Token;
+export function findOne<T extends TokenType>(node: Token<any>, type: T): Token<T> {
+  let rt: Token<T>;
   createTraverser({
-    [type]: (v: Token) => {
+    [type]: (v: Token<T>) => {
       rt = v;
     }
   })(node);
@@ -95,10 +91,10 @@ export function findOne(node: Token, type: any): Token {
  * @param node
  * @param type
  */
-export function findAll(node: Token, type: TokenType): Array<Token> {
-  const rt: Array<Token> = [];
+export function findAll<T extends TokenType>(node: Token<any>, type: T): Array<Token<T>> {
+  const rt: Array<Token<T>> = [];
   createTraverser({
-    [type]: (v: Token) => {
+    [type]: (v: Token<T>) => {
       rt.push(v);
     }
   })(node);
