@@ -4,7 +4,7 @@ import * as PrimitiveLiteral from '../src/primitiveLiteral';
 import cases from './primitive-cases';
 
 describe('Primitive literals from json', () => {
-  cases.forEach((item, index, array) => {
+  cases.forEach((item, index) => {
     const title = `#${index} should parse ${item['-Name']}: ${item.Input}`;
     let resultName = 'result';
     if (item.result === undefined) {

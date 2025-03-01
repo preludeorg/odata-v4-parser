@@ -1,46 +1,38 @@
 import { get } from '@newdash/newdash';
 import { PrimitiveTypeEnum } from '@odata/metadata';
-import { defaultParser, ODataFilter, ODataParam } from '../src';
+import { ODataFilter, ODataParam } from '../src';
 import { TokenType } from '../src/lexer';
 import { Parser } from '../src/parser';
-import { findAll, findOne, isType } from '../src/utils';
+import { assertType, findAll, findOne, isType } from '../src/utils';
 
 describe('Query Test Suite', () => {
-
   const parser = new Parser();
 
   const expands = [
-    [ODataParam.New().expand('A').toString(), 'A'],
-    [ODataParam.New().expand('A/V').toString(), 'A/V'],
-    [ODataParam.New().expand('A/B/C').toString(), 'A/B/C'],
-    [ODataParam.New().expand(['A', 'B/C']).toString(), 'A'],
-    [ODataParam.New().expand('*').toString(), '*']
+    { original: ODataParam.New().expand('A').toString(), parsed: 'A' },
+    { original: ODataParam.New().expand('A/V').toString(), parsed: 'A/V' },
+    { original: ODataParam.New().expand('A/B/C').toString(), parsed: 'A/B/C' },
+    { original: ODataParam.New().expand(['A', 'B/C']).toString(), parsed: 'A' },
+    { original: ODataParam.New().expand('*').toString(), parsed: '*' }
   ];
 
-  expands.forEach(([original, parsed]) => {
-
-    it(`should parse ${original}`, () => {
-
-      expect(parser.query(original).value.options[0].value.items[0].raw).toEqual(parsed);
-
-    });
-
+  it.each(expands)(`should parse $original`, ({ original, parsed }) => {
+    const ast = parser.query(original);
+    assertType(ast.value.options[0], TokenType.Expand);
+    expect(ast.value.options[0].value.items[0].raw).toEqual(parsed);
   });
 
   it('should parse $top', () => {
-
     const ast = parser.query('$top=1');
 
     expect(ast.value.options[0].type).toBe(TokenType.Top);
 
-    if (isType(ast.value.options[0], TokenType.Top)) {
-      expect(ast.value.options[0].value.raw).toEqual('1');
-    }
-
+    assertType(ast.value.options[0], TokenType.Top);
+    expect(ast.value.options[0].value.raw).toEqual('1');
   });
 
   it('should parse $top and $skip', () => {
-    const ast = defaultParser.query('$top=1&$skip=120');
+    const ast = parser.query('$top=1&$skip=120');
     expect(ast.value.options[0].type).toBe(TokenType.Top);
     expect(ast.value.options[1].type).toBe(TokenType.Skip);
 
@@ -53,37 +45,50 @@ describe('Query Test Suite', () => {
   });
 
   it('should parse $select', () => {
-    expect(parser.query('$select=A').value.options[0].value.items[0].value.raw).toEqual('A');
-    expect(parser.query('$select=*').value.options[0].value.items[0].value.value).toEqual('*');
-    let ast = defaultParser.query('$select=A,B,C');
-    expect(findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
+    let ast = parser.query('$select=A');
+    assertType(ast.value.options[0], TokenType.Select);
+    assertType(ast.value.options[0].value.items[0].value, TokenType.SelectPath);
+    expect(ast.value.options[0].value.items[0].value.raw).toEqual('A');
+
+    ast = parser.query('$select=*');
+    assertType(ast.value.options[0], TokenType.Select);
+    expect(ast.value.options[0].value.items[0].value.value).toEqual('*');
+
+    ast = parser.query('$select=A,B,C');
+    expect(
+      findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
     ).toStrictEqual(['A', 'B', 'C']);
-    ast = defaultParser.query('$select=A, B,C');
-    expect(findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
+
+    ast = parser.query('$select=A, B,C');
+    expect(
+      findAll(ast, TokenType.SelectPath).map((node) => get(node, 'value.value.name'))
     ).toStrictEqual(['A', 'B', 'C']);
 
     parser.query('$select=A/B');
   });
 
   it('should parse $search', () => {
-
-    parser.query('$search=theo');
-    parser.query('$search="theo%20sun"');
-
+    expect(() => {
+      parser.query('$search=theo');
+      parser.query('$search="theo%20sun"');
+    }).not.toThrow();
   });
 
   it('should parse $orderby', () => {
-    parser.query('$orderby=A desc');
-    parser.query('$orderby=A desc,B asc');
-    parser.query('$orderby=A desc, B asc');
-
+    expect(() => {
+      parser.query('$orderby=A desc');
+      parser.query('$orderby=A desc,B asc');
+      parser.query('$orderby=A desc, B asc');
+    }).not.toThrow();
   });
 
   it('should parse $format', () => {
-    parser.query('$format=xml');
-    parser.query('$format=json');
-    parser.query('$format=JSON');
-    parser.query('$format=atom');
+    expect(() => {
+      parser.query('$format=xml');
+      parser.query('$format=json');
+      parser.query('$format=JSON');
+      parser.query('$format=atom');
+    }).not.toThrow();
   });
 
   it('should parse $count', () => {
@@ -93,15 +98,13 @@ describe('Query Test Suite', () => {
   });
 
   it('should parse $filter only', () => {
-    const ast = defaultParser.query('$filter=id eq 1');
+    const ast = parser.query('$filter=id eq 1');
     expect(ast).not.toBeUndefined();
     expect(ast.value.options).not.toBeUndefined();
     expect(ast.value.options).toHaveLength(1);
-
   });
 
   it('should parse complex uri', () => {
-
     const u1 = ODataParam.New()
       .top(1)
       .skip(10)
@@ -112,7 +115,8 @@ describe('Query Test Suite', () => {
       .expand('F1,F2')
       .filter(ODataFilter.New().field('A').eq(1).toString())
       .toString();
-    const ast = defaultParser.query(u1);
+
+    const ast = parser.query(u1);
 
     expect(findOne(ast, TokenType.Filter).value).not.toBeNull();
 
@@ -124,7 +128,6 @@ describe('Query Test Suite', () => {
       }
     });
     expect(findOne(ast, TokenType.Skip).value.raw).toBe('10');
-
     expect(findOne(ast, TokenType.Format).value.format).toBe('json');
     expect(findOne(ast, TokenType.Search).value.value).toBe('A');
 
@@ -134,7 +137,5 @@ describe('Query Test Suite', () => {
         .items
         .map((item) => item.raw)
     ).toStrictEqual(['F1', 'F2']);
-
   });
-
 });

@@ -1,3 +1,4 @@
+import { TokenOfType, TokenTypeValue } from './token';
 import Utils, { SourceArray } from './utils';
 
 export enum TokenType {
@@ -134,7 +135,6 @@ export enum TokenType {
   Crossjoin = 'Crossjoin',
   AllResource = 'AllResource',
   ActionImportCall = 'ActionImportCall',
-  FunctionImportCall = 'FunctionImportCall',
   EntityCollectionFunctionImportCall = 'EntityCollectionFunctionImportCall',
   EntityFunctionImportCall = 'EntityFunctionImportCall',
   ComplexCollectionFunctionImportCall = 'ComplexCollectionFunctionImportCall',
@@ -166,23 +166,25 @@ export enum TokenType {
 export const LexerTokenType = TokenType;
 export type LexerTokenType = TokenType;
 
-export class Token {
+export type MetadataContext = any;
+
+export class Token<T extends TokenType = any> {
   position: number;
   next: number;
-  value: any;
-  type: TokenType;
+  value: TokenTypeValue<T>;
+  type: T;
   /**
    * raw string of token
    */
   raw: string;
-  metadata: any;
+  metadata: MetadataContext;
   constructor(token: {
     position: number;
     next: number;
-    value: any;
-    type: TokenType;
+    value: TokenTypeValue<T>;
+    type: T;
     raw: string;
-    metadata?: any;
+    metadata?: MetadataContext;
   }) {
     this.position = token.position;
     this.next = token.next;
@@ -197,15 +199,15 @@ export class Token {
 
 export type LexerToken = Token;
 
-export function tokenize(
+export function tokenize<T extends TokenType>(
   value: SourceArray,
   index: number,
   next: number,
-  tokenValue: any,
-  tokenType: TokenType,
-  metadataContextContainer?: Token
-): Token {
-  const token = new Token({
+  tokenValue: TokenTypeValue<T>,
+  tokenType: T,
+  metadataContextContainer?: { metadata: MetadataContext }
+): TokenOfType<T> {
+  const token = new Token<T>({
     position: index,
     next,
     value: tokenValue,
@@ -219,9 +221,8 @@ export function tokenize(
   return token;
 }
 
-
-export function clone(token): Token {
-  return new Token({
+export function clone<T extends TokenType>(token: Token<T>): TokenOfType<T> {
+  return new Token<T>({
     position: token.position,
     next: token.next,
     value: token.value,

@@ -2,13 +2,19 @@ import * as Expressions from './expressions';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import * as Token from './token';
 import Utils, { SourceArray } from './utils';
 
 export function resourcePath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Token.TokenOfType<
+  | Lexer.TokenType.Batch
+  | Lexer.TokenType.Entity
+  | Lexer.TokenType.Metadata
+  | Lexer.TokenType.ResourcePath
+> {
   if (value[index] === 0x2f) {
     index++;
   }
@@ -33,7 +39,15 @@ export function resourcePath(
   }
   const start = index;
   index = resource.next;
-  let navigation: Lexer.Token;
+  let navigation:
+    | Lexer.Token<Lexer.TokenType.CollectionNavigation>
+    | Lexer.Token<Lexer.TokenType.SingleNavigation>
+    | Lexer.Token<Lexer.TokenType.BoundOperation>
+    | Lexer.Token<Lexer.TokenType.RefExpression>
+    | Lexer.Token<Lexer.TokenType.ValueExpression>
+    | Lexer.Token<Lexer.TokenType.CountExpression>
+    | Lexer.Token<Lexer.TokenType.BoundOperation>
+    | Lexer.Token<Lexer.TokenType.ComplexPath>;
 
   switch (resource.type) {
     case Lexer.TokenType.EntitySetName:
@@ -111,12 +125,15 @@ export function resourcePath(
       index,
       { resource, navigation },
       Lexer.TokenType.ResourcePath,
-      navigation || <any>{ metadata: metadataContext }
+      navigation || { metadata: metadataContext }
     );
   }
 }
 
-export function batch(value: SourceArray, index: number): Lexer.Token {
+export function batch(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.Batch> {
   if (Utils.equals(value, index, '$batch')) {
     return Lexer.tokenize(
       value,
@@ -131,8 +148,8 @@ export function batch(value: SourceArray, index: number): Lexer.Token {
 export function entity(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.Entity> {
   if (Utils.equals(value, index, '$entity')) {
     const start = index;
     index += 7;
@@ -160,7 +177,10 @@ export function entity(
   }
 }
 
-export function metadata(value: SourceArray, index: number): Lexer.Token {
+export function metadata(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.Metadata> {
   if (Utils.equals(value, index, '$metadata')) {
     return Lexer.tokenize(
       value,
@@ -175,8 +195,8 @@ export function metadata(value: SourceArray, index: number): Lexer.Token {
 export function collectionNavigation(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.CollectionNavigation> {
   const start = index;
   let name;
   if (value[index] === 0x2f) {
@@ -214,8 +234,8 @@ export function collectionNavigation(
 export function collectionNavigationPath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Token.CollectionNavigationToken['value']['path'] {
   const start = index;
   const token =
     collectionPath(value, index, metadataContext) ||
@@ -226,7 +246,7 @@ export function collectionNavigationPath(
 
   const predicate = Expressions.keyPredicate(value, index, metadataContext);
   if (predicate) {
-    let tokenValue: any = { predicate };
+    let tokenValue: Token.CollectionNavigationPathToken['value'] = { predicate };
     index = predicate.next;
 
     const navigation = singleNavigation(value, index, metadataContext);
@@ -241,7 +261,7 @@ export function collectionNavigationPath(
       index,
       tokenValue,
       Lexer.TokenType.CollectionNavigationPath,
-      navigation || <any>{ metadata: metadataContext }
+      navigation || { metadata: metadataContext }
     );
   }
 }
@@ -249,9 +269,18 @@ export function collectionNavigationPath(
 export function singleNavigation(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
-  let token =
+  metadataContext?: Lexer.MetadataContext
+):
+  | Lexer.Token<Lexer.TokenType.SingleNavigation>
+  | Lexer.Token<Lexer.TokenType.BoundOperation>
+  | Lexer.Token<Lexer.TokenType.RefExpression>
+  | Lexer.Token<Lexer.TokenType.ValueExpression> {
+  let token:
+    | Lexer.Token<Lexer.TokenType.SingleNavigation>
+    | Lexer.Token<Lexer.TokenType.BoundOperation>
+    | Lexer.Token<Lexer.TokenType.RefExpression>
+    | Lexer.Token<Lexer.TokenType.ValueExpression>
+    | Lexer.Token<Lexer.TokenType.PropertyPath> =
     boundOperation(value, index, false, metadataContext) ||
     Expressions.refExpr(value, index) ||
     Expressions.valueExpr(value, index);
@@ -299,8 +328,8 @@ export function singleNavigation(
 export function propertyPath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.PropertyPath> {
   const token =
     NameOrIdentifier.entityColNavigationProperty(
       value,
@@ -370,8 +399,8 @@ export function propertyPath(
 export function collectionPath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.CountExpression> | Lexer.Token<Lexer.TokenType.BoundOperation> {
   return (
     Expressions.countExpr(value, index) ||
     boundOperation(value, index, true, metadataContext)
@@ -381,8 +410,8 @@ export function collectionPath(
 export function singlePath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ValueExpression> | Lexer.Token<Lexer.TokenType.BoundOperation> {
   return (
     Expressions.valueExpr(value, index) ||
     boundOperation(value, index, false, metadataContext)
@@ -392,8 +421,8 @@ export function singlePath(
 export function complexPath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ComplexPath> {
   const start = index;
   let name, token;
   if (value[index] === 0x2f) {
@@ -435,8 +464,8 @@ export function boundOperation(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundOperation> {
   if (value[index] !== 0x2f) {
     return;
   }
@@ -522,8 +551,8 @@ export function boundActionCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundActionCall> {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index) {
     return;
@@ -545,7 +574,9 @@ export function boundActionCall(
   if (!action) {
     return;
   }
-  action.value.namespace = Utils.stringify(value, start, namespaceNext);
+  if (!(action.value instanceof Lexer.Token)) {
+    action.value.namespace = Utils.stringify(value, start, namespaceNext);
+  }
 
   return Lexer.tokenize(
     value,
@@ -557,14 +588,26 @@ export function boundActionCall(
   );
 }
 
-export function boundFunctionCall(
+export function boundFunctionCall<T extends
+  | Lexer.TokenType.BoundEntityFunctionCall
+  | Lexer.TokenType.BoundEntityCollectionFunctionCall
+  | Lexer.TokenType.BoundComplexFunctionCall
+  | Lexer.TokenType.BoundComplexCollectionFunctionCall
+  | Lexer.TokenType.BoundPrimitiveFunctionCall
+  | Lexer.TokenType.BoundPrimitiveCollectionFunctionCall
+>(
   value: SourceArray,
   index: number,
-  odataFunction: Function,
-  tokenType: Lexer.TokenType,
+  odataFunction: (
+    value: SourceArray,
+    index: number,
+    isCollection?: boolean,
+    metadataContext?: Lexer.MetadataContext
+  ) => Token.TokenOfType<T>['value']['call'],
+  tokenType: T,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Token.TokenOfType<T> {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index) {
     return;
@@ -590,6 +633,7 @@ export function boundFunctionCall(
   }
   index = params.next;
 
+  // @ts-expect-error -- TODO: fix `tokenType` and `call` types not aligning here (even though they do in practice)
   return Lexer.tokenize(value, start, index, { call, params }, tokenType, call);
 }
 
@@ -597,8 +641,8 @@ export function boundEntityFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundEntityFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -612,8 +656,8 @@ export function boundEntityColFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundEntityCollectionFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -627,8 +671,8 @@ export function boundComplexFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundComplexFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -642,8 +686,8 @@ export function boundComplexColFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundComplexCollectionFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -657,8 +701,8 @@ export function boundPrimitiveFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundPrimitiveFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -672,8 +716,8 @@ export function boundPrimitiveColFuncCall(
   value: SourceArray,
   index: number,
   isCollection: boolean,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.BoundPrimitiveCollectionFunctionCall> {
   return boundFunctionCall(
     value,
     index,
@@ -687,8 +731,8 @@ export function boundPrimitiveColFuncCall(
 export function actionImportCall(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ActionImportCall> {
   const action = NameOrIdentifier.actionImport(value, index, metadataContext);
   if (action) {
     return Lexer.tokenize(
@@ -705,8 +749,14 @@ export function actionImportCall(
 export function functionImportCall(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+):
+  | Lexer.Token<Lexer.TokenType.EntityFunctionImportCall>
+  | Lexer.Token<Lexer.TokenType.EntityCollectionFunctionImportCall>
+  | Lexer.Token<Lexer.TokenType.ComplexFunctionImportCall>
+  | Lexer.Token<Lexer.TokenType.ComplexCollectionFunctionImportCall>
+  | Lexer.Token<Lexer.TokenType.PrimitiveFunctionImportCall>
+  | Lexer.Token<Lexer.TokenType.PrimitiveCollectionFunctionImportCall> {
   const fnImport =
     NameOrIdentifier.entityFunctionImport(value, index, metadataContext) ||
     NameOrIdentifier.entityColFunctionImport(value, index, metadataContext) ||
@@ -731,8 +781,9 @@ export function functionImportCall(
     value,
     start,
     index,
+    // @ts-expect-error -- TODO: fix `tokenType` and `import` types not aligning here (even though they do in practice)
     { import: fnImport, params: params.value },
-    <Lexer.TokenType>`${fnImport.type}Call`,
+    Lexer.TokenType[`${fnImport.type}Call`],
     fnImport
   );
 }
@@ -740,8 +791,8 @@ export function functionImportCall(
 export function functionParameters(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.FunctionParameters> {
   const open = Lexer.OPEN(value, index);
   if (!open) {
     return;
@@ -785,8 +836,8 @@ export function functionParameters(
 export function functionParameter(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.FunctionParameter> {
   const name = Expressions.parameterName(value, index);
   if (!name) {
     return;
@@ -821,8 +872,8 @@ export function functionParameter(
 export function crossjoin(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.Crossjoin> {
   if (!Utils.equals(value, index, '$crossjoin')) {
     return;
   }
@@ -871,7 +922,10 @@ export function crossjoin(
   );
 }
 
-export function all(value: SourceArray, index: number): Lexer.Token {
+export function all(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.AllResource> {
   if (Utils.equals(value, index, '$all')) {
     return Lexer.tokenize(
       value,

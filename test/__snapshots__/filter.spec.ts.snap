@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Filter Test Suite shuold support filter with double quote 1`] = `"$filter=key eq 'val"'"`;
+exports[`Filter Test Suite should support filter with double quote 1`] = `"$filter=key eq 'val"'"`;
 
-exports[`Filter Test Suite shuold support filter with double quote 2`] = `
+exports[`Filter Test Suite should support filter with double quote 2`] = `
 Token {
   "next": 21,
   "position": 0,
@@ -63,9 +63,9 @@ Token {
 }
 `;
 
-exports[`Filter Test Suite shuold support filter with other chars 1`] = `"$filter=key eq 'val$%^&*()_'"`;
+exports[`Filter Test Suite should support filter with other chars 1`] = `"$filter=key eq 'val$%^&*()_'"`;
 
-exports[`Filter Test Suite shuold support filter with other chars 2`] = `
+exports[`Filter Test Suite should support filter with other chars 2`] = `
 Token {
   "next": 28,
   "position": 0,
@@ -126,9 +126,9 @@ Token {
 }
 `;
 
-exports[`Filter Test Suite shuold support filter with single quote 1`] = `"$filter=key eq 'T''A First'"`;
+exports[`Filter Test Suite should support filter with single quote 1`] = `"$filter=key eq 'T''A First'"`;
 
-exports[`Filter Test Suite shuold support filter with single quote 2`] = `
+exports[`Filter Test Suite should support filter with single quote 2`] = `
 Token {
   "next": 27,
   "position": 0,
@@ -189,9 +189,9 @@ Token {
 }
 `;
 
-exports[`Filter Test Suite shuold support filter without double quote 1`] = `"$filter=key eq 'val'"`;
+exports[`Filter Test Suite should support filter without double quote 1`] = `"$filter=key eq 'val'"`;
 
-exports[`Filter Test Suite shuold support filter without double quote 2`] = `
+exports[`Filter Test Suite should support filter without double quote 2`] = `
 Token {
   "next": 20,
   "position": 0,

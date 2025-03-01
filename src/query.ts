@@ -2,13 +2,15 @@ import * as Expressions from './expressions';
 import * as Lexer from './lexer';
 import * as NameOrIdentifier from './nameOrIdentifier';
 import * as PrimitiveLiteral from './primitiveLiteral';
+import * as Token from './token';
+import { SelectPathToken, TokenOfType, TokenTypeValue } from './token';
 import Utils, { SourceArray } from './utils';
 
 export function queryOptions(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.QueryOptions> {
   if (value.length <= index) {
     return Lexer.tokenize(
       value,
@@ -53,8 +55,21 @@ export function queryOptions(
 export function queryOption(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+):
+  | Lexer.Token<Lexer.TokenType.Expand>
+  | Lexer.Token<Lexer.TokenType.Filter>
+  | Lexer.Token<Lexer.TokenType.Format>
+  | Lexer.Token<Lexer.TokenType.Id>
+  | Lexer.Token<Lexer.TokenType.InlineCount>
+  | Lexer.Token<Lexer.TokenType.OrderBy>
+  | Lexer.Token<Lexer.TokenType.Search>
+  | Lexer.Token<Lexer.TokenType.Select>
+  | Lexer.Token<Lexer.TokenType.Skip>
+  | Lexer.Token<Lexer.TokenType.SkipToken>
+  | Lexer.Token<Lexer.TokenType.Top>
+  | Lexer.Token<Lexer.TokenType.AliasAndValue>
+  | Lexer.Token<Lexer.TokenType.CustomQueryOption> {
   return (
     systemQueryOption(value, index, metadataContext) ||
     aliasAndValue(value, index) ||
@@ -65,8 +80,19 @@ export function queryOption(
 export function systemQueryOption(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+):
+  | Lexer.Token<Lexer.TokenType.Expand>
+  | Lexer.Token<Lexer.TokenType.Filter>
+  | Lexer.Token<Lexer.TokenType.Format>
+  | Lexer.Token<Lexer.TokenType.Id>
+  | Lexer.Token<Lexer.TokenType.InlineCount>
+  | Lexer.Token<Lexer.TokenType.OrderBy>
+  | Lexer.Token<Lexer.TokenType.Search>
+  | Lexer.Token<Lexer.TokenType.Select>
+  | Lexer.Token<Lexer.TokenType.Skip>
+  | Lexer.Token<Lexer.TokenType.SkipToken>
+  | Lexer.Token<Lexer.TokenType.Top> {
   return (
     expand(value, index, metadataContext) ||
     filter(value, index) ||
@@ -85,8 +111,8 @@ export function systemQueryOption(
 export function customQueryOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
-  const key = NameOrIdentifier.odataIdentifier(value, index);
+): Lexer.Token<Lexer.TokenType.CustomQueryOption> {
+  const key = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ODataIdentifier);
   if (!key) {
     return;
   }
@@ -118,7 +144,10 @@ export function customQueryOption(
   );
 }
 
-export function id(value: SourceArray, index: number): Lexer.Token {
+export function id(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.Id> {
   const start = index;
   if (Utils.equals(value, index, '%24id')) {
     index += 5;
@@ -153,8 +182,8 @@ export function id(value: SourceArray, index: number): Lexer.Token {
 export function expand(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.Expand> {
   const start = index;
   if (Utils.equals(value, index, '%24expand')) {
     index += 9;
@@ -199,8 +228,8 @@ export function expand(
 export function expandItem(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ExpandItem> {
   const start = index;
   const star = Lexer.STAR(value, index);
   if (star) {
@@ -258,7 +287,7 @@ export function expandItem(
   }
   index = path.next;
 
-  const tokenValue: any = { path };
+  const tokenValue: Token.ExpandItemToken['value'] = { path };
 
   const ref = Expressions.refExpr(value, index);
   if (ref) {
@@ -274,7 +303,7 @@ export function expandItem(
         return;
       }
 
-      const refOptions = [];
+      const refOptions: NonNullable<Token.ExpandItemToken['value']['options']> = [];
       while (option) {
         refOptions.push(option);
         index = option.next;
@@ -390,14 +419,20 @@ export function expandItem(
 export function expandCountOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.Token<Lexer.TokenType.Filter> | Lexer.Token<Lexer.TokenType.Search> {
   return filter(value, index) || search(value, index);
 }
 
 export function expandRefOption(
   value: SourceArray,
   index: number
-): Lexer.Token {
+):
+  | Lexer.Token<Lexer.TokenType.Filter>
+  | Lexer.Token<Lexer.TokenType.Search>
+  | Lexer.Token<Lexer.TokenType.OrderBy>
+  | Lexer.Token<Lexer.TokenType.Skip>
+  | Lexer.Token<Lexer.TokenType.Top>
+  | Lexer.Token<Lexer.TokenType.InlineCount> {
   return (
     expandCountOption(value, index) ||
     orderby(value, index) ||
@@ -407,7 +442,19 @@ export function expandRefOption(
   );
 }
 
-export function expandOption(value: SourceArray, index: number): Lexer.Token {
+export function expandOption(
+  value: SourceArray,
+  index: number
+):
+  | Lexer.Token<Lexer.TokenType.Filter>
+  | Lexer.Token<Lexer.TokenType.Search>
+  | Lexer.Token<Lexer.TokenType.OrderBy>
+  | Lexer.Token<Lexer.TokenType.Skip>
+  | Lexer.Token<Lexer.TokenType.Top>
+  | Lexer.Token<Lexer.TokenType.InlineCount>
+  | Lexer.Token<Lexer.TokenType.Select>
+  | Lexer.Token<Lexer.TokenType.Expand>
+  | Lexer.Token<Lexer.TokenType.Levels> {
   return (
     expandRefOption(value, index) ||
     select(value, index) ||
@@ -419,8 +466,8 @@ export function expandOption(value: SourceArray, index: number): Lexer.Token {
 export function expandPath(
   value: SourceArray,
   index: number,
-  metadataContext?: any
-): Lexer.Token {
+  metadataContext?: Lexer.MetadataContext
+): Lexer.Token<Lexer.TokenType.ExpandPath> {
   const start = index;
   const path = [];
 
@@ -500,7 +547,7 @@ export function expandPath(
   return Lexer.tokenize(value, start, index, path, Lexer.TokenType.ExpandPath);
 }
 
-export function search(value: SourceArray, index: number): Lexer.Token {
+export function search(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Search> {
   const start = index;
   if (Utils.equals(value, index, '%24search')) {
     index += 9;
@@ -525,50 +572,78 @@ export function search(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Search);
 }
 
-export function searchExpr(value: SourceArray, index: number): Lexer.Token {
-  const token = searchParenExpr(value, index) || searchTerm(value, index);
+export function searchExpr(
+  value: SourceArray,
+  index: number
+):
+  | Lexer.Token<Lexer.TokenType.SearchAndExpression>
+  | Lexer.Token<Lexer.TokenType.SearchOrExpression>
+  | Lexer.Token<Lexer.TokenType.SearchNotExpression>
+  | Lexer.Token<Lexer.TokenType.SearchParenExpression>
+  | Lexer.Token<Lexer.TokenType.SearchPhrase>
+  | Lexer.Token<Lexer.TokenType.SearchTerm>
+  | Lexer.Token<Lexer.TokenType.SearchWord> {
+  let token: TokenOfType<
+    | Lexer.TokenType.SearchAndExpression
+    | Lexer.TokenType.SearchOrExpression
+    | Lexer.TokenType.SearchNotExpression
+    | Lexer.TokenType.SearchParenExpression
+    | Lexer.TokenType.SearchPhrase
+    | Lexer.TokenType.SearchTerm
+    | Lexer.TokenType.SearchWord
+  > = searchParenExpr(value, index) || searchTerm(value, index);
 
   if (!token) {
     return;
   }
-  const start = index;
   index = token.next;
 
   const expr = searchAndExpr(value, index) || searchOrExpr(value, index);
 
   if (expr) {
     const left = Lexer.clone(token);
-    token.next = expr.value.next;
-    token.value = {
-      left,
-      right: expr.value
-    };
-    token.type = expr.type;
-    token.raw = Utils.stringify(value, token.position, token.next);
+    token = new Lexer.Token({
+      ...token,
+      type: expr.type,
+      value: { left, right: expr.value },
+      next: expr.value.next,
+      raw: Utils.stringify(value, token.position, token.next)
+    });
 
     if (
       token.type === Lexer.TokenType.SearchAndExpression &&
       token.value.right.type === Lexer.TokenType.SearchOrExpression
     ) {
-      token.value.left = Lexer.tokenize(
-        value,
-        token.value.left.position,
-        token.value.right.value.left.next,
-        {
-          left: token.value.left,
-          right: token.value.right.value.left
-        },
-        token.type
-      );
-      token.type = token.value.right.type;
-      token.value.right = token.value.right.value.right;
+      token = Lexer.clone({
+        ...token,
+        type: token.value.right.type,
+        value: {
+          left: Lexer.tokenize(
+            value,
+            token.value.left.position,
+            token.value.right.value.left.next,
+            {
+              left: token.value.left,
+              right: token.value.right.value.left
+            },
+            token.type
+          ),
+          right: token.value.right.value.right
+        }
+      });
     }
   }
 
   return token;
 }
 
-export function searchTerm(value: SourceArray, index: number): Lexer.Token {
+export function searchTerm(
+  value: SourceArray,
+  index: number
+):
+  | Lexer.Token<Lexer.TokenType.SearchNotExpression>
+  | Lexer.Token<Lexer.TokenType.SearchPhrase>
+  | Lexer.Token<Lexer.TokenType.SearchWord> {
   return (
     searchNotExpr(value, index) ||
     searchPhrase(value, index) ||
@@ -576,7 +651,7 @@ export function searchTerm(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function searchNotExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchNotExpr(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.SearchNotExpression> {
   let rws = Lexer.RWS(value, index);
   if (!Utils.equals(value, rws, 'NOT')) {
     return;
@@ -603,7 +678,20 @@ export function searchNotExpr(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function searchOrExpr(value: SourceArray, index: number): Lexer.Token {
+interface InternalSearchAndOrExpression<
+  T extends Lexer.TokenType.SearchAndExpression | Lexer.TokenType.SearchOrExpression
+> {
+  type: T;
+  value: TokenTypeValue<T>['right'];
+  position: number;
+  next: number;
+  raw: string;
+}
+
+export function searchOrExpr(
+  value: SourceArray,
+  index: number
+): InternalSearchAndOrExpression<Lexer.TokenType.SearchOrExpression> {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'OR')) {
     return;
@@ -621,16 +709,19 @@ export function searchOrExpr(value: SourceArray, index: number): Lexer.Token {
   }
   index = token.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    Lexer.TokenType.SearchOrExpression
-  );
+  return {
+    type: Lexer.TokenType.SearchOrExpression,
+    value: token,
+    position: start,
+    next: index,
+    raw: Utils.stringify(value, start, index)
+  };
 }
 
-export function searchAndExpr(value: SourceArray, index: number): Lexer.Token {
+export function searchAndExpr(
+  value: SourceArray,
+  index: number
+): InternalSearchAndOrExpression<Lexer.TokenType.SearchAndExpression> {
   let rws = Lexer.RWS(value, index);
   if (rws === index || !Utils.equals(value, rws, 'AND')) {
     return;
@@ -648,16 +739,16 @@ export function searchAndExpr(value: SourceArray, index: number): Lexer.Token {
   }
   index = token.next;
 
-  return Lexer.tokenize(
-    value,
-    start,
-    index,
-    token,
-    Lexer.TokenType.SearchAndExpression
-  );
+  return {
+    type: Lexer.TokenType.SearchAndExpression,
+    value: token,
+    position: start,
+    next: index,
+    raw: Utils.stringify(value, start, index)
+  };
 }
 
-export function searchPhrase(value: SourceArray, index: number): Lexer.Token {
+export function searchPhrase(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.SearchPhrase> {
   let mark = Lexer.quotationMark(value, index);
   if (mark === index) {
     return;
@@ -692,7 +783,7 @@ export function searchPhrase(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function searchWord(value: SourceArray, index: number): Lexer.Token {
+export function searchWord(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.SearchWord> {
   const next = Utils.required(value, index, Lexer.ALPHA, 1);
   if (!next) {
     return;
@@ -714,7 +805,7 @@ export function searchWord(value: SourceArray, index: number): Lexer.Token {
 export function searchParenExpr(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.Token<Lexer.TokenType.SearchParenExpression> {
   const open = Lexer.OPEN(value, index);
   if (!open) {
     return;
@@ -745,7 +836,7 @@ export function searchParenExpr(
   );
 }
 
-export function levels(value: SourceArray, index: number): Lexer.Token {
+export function levels(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Levels> {
   const start = index;
   if (Utils.equals(value, index, '%24levels')) {
     index += 9;
@@ -777,7 +868,7 @@ export function levels(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, level, Lexer.TokenType.Levels);
 }
 
-export function filter(value: SourceArray, index: number): Lexer.Token {
+export function filter(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Filter> {
   const start = index;
   if (Utils.equals(value, index, '%24filter')) {
     index += 9;
@@ -802,7 +893,7 @@ export function filter(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Filter);
 }
 
-export function orderby(value: SourceArray, index: number): Lexer.Token {
+export function orderby(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.OrderBy> {
   const start = index;
   if (Utils.equals(value, index, '%24orderby')) {
     index += 10;
@@ -854,7 +945,7 @@ export function orderby(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function orderbyItem(value: SourceArray, index: number): Lexer.Token {
+export function orderbyItem(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.OrderByItem> {
   const expr = Expressions.commonExpr(value, index);
   if (!expr) {
     return;
@@ -885,7 +976,7 @@ export function orderbyItem(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function skip(value: SourceArray, index: number): Lexer.Token {
+export function skip(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Skip> {
   const start = index;
   if (Utils.equals(value, index, '%24skip')) {
     index += 7;
@@ -910,7 +1001,7 @@ export function skip(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Skip);
 }
 
-export function top(value: SourceArray, index: number): Lexer.Token {
+export function top(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Top> {
   const start = index;
   if (Utils.equals(value, index, '%24top')) {
     index += 6;
@@ -935,7 +1026,7 @@ export function top(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Top);
 }
 
-export function format(value: SourceArray, index: number): Lexer.Token {
+export function format(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Format> {
   const start = index;
   if (Utils.equals(value, index, '%24format')) {
     index += 9;
@@ -980,7 +1071,7 @@ export function format(value: SourceArray, index: number): Lexer.Token {
   }
 }
 
-export function inlinecount(value: SourceArray, index: number): Lexer.Token {
+export function inlinecount(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.InlineCount> {
   const start = index;
   if (Utils.equals(value, index, '%24count')) {
     index += 8;
@@ -1011,7 +1102,7 @@ export function inlinecount(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function select(value: SourceArray, index: number): Lexer.Token {
+export function select(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.Select> {
   const start = index;
   if (Utils.equals(value, index, '%24select')) {
     index += 9;
@@ -1055,7 +1146,10 @@ export function select(value: SourceArray, index: number): Lexer.Token {
   return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Select);
 }
 
-export function selectItem(value: SourceArray, index: number): Lexer.Token {
+export function selectItem(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.SelectItem> {
   const start = index;
   let item;
   const op = allOperationsInSchema(value, index);
@@ -1114,7 +1208,17 @@ export function allOperationsInSchema(
   return index;
 }
 
-export function selectProperty(value: SourceArray, index: number): Lexer.Token {
+export function selectProperty(
+  value: SourceArray,
+  index: number
+):
+  | Lexer.Token<Lexer.TokenType.SelectPath>
+  | Lexer.Token<Lexer.TokenType.PrimitiveProperty>
+  | Lexer.Token<Lexer.TokenType.PrimitiveKeyProperty>
+  | Lexer.Token<Lexer.TokenType.PrimitiveCollectionProperty>
+  | Lexer.Token<Lexer.TokenType.PrimitiveKeyProperty>
+  | Lexer.Token<Lexer.TokenType.EntityNavigationProperty>
+  | Lexer.Token<Lexer.TokenType.EntityCollectionNavigationProperty> {
   const token =
     selectPath(value, index) ||
     NameOrIdentifier.primitiveProperty(value, index) ||
@@ -1144,7 +1248,7 @@ export function selectProperty(value: SourceArray, index: number): Lexer.Token {
   return token;
 }
 
-export function selectPath(value: SourceArray, index: number): Lexer.Token {
+export function selectPath(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.SelectPath> {
   const token =
     NameOrIdentifier.complexProperty(value, index) ||
     NameOrIdentifier.complexColProperty(value, index);
@@ -1155,7 +1259,7 @@ export function selectPath(value: SourceArray, index: number): Lexer.Token {
   const start = index;
   index = token.next;
 
-  let tokenValue: any = token;
+  let tokenValue: SelectPathToken['value'] = token;
   if (value[index] === 0x2f) {
     const name = NameOrIdentifier.qualifiedComplexTypeName(value, index + 1);
     if (name) {
@@ -1176,7 +1280,7 @@ export function selectPath(value: SourceArray, index: number): Lexer.Token {
 export function qualifiedActionName(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.Token<Lexer.TokenType.Action> {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
     return;
@@ -1188,7 +1292,9 @@ export function qualifiedActionName(
   if (!action) {
     return;
   }
-  action.value.namespace = Utils.stringify(value, start, namespaceNext);
+  if (!(action.value instanceof Lexer.Token)) {
+    action.value.namespace = Utils.stringify(value, start, namespaceNext);
+  }
 
   return Lexer.tokenize(
     value,
@@ -1202,7 +1308,7 @@ export function qualifiedActionName(
 export function qualifiedFunctionName(
   value: SourceArray,
   index: number
-): Lexer.Token {
+): Lexer.Token<Lexer.TokenType.Function> {
   const namespaceNext = NameOrIdentifier.namespace(value, index);
   if (namespaceNext === index || value[namespaceNext] !== 0x2e) {
     return;
@@ -1216,12 +1322,11 @@ export function qualifiedFunctionName(
   }
   fn.value.namespace = Utils.stringify(value, start, namespaceNext);
   index = fn.next;
-  const tokenValue: any = { name: fn };
+  const tokenValue: Token.FunctionToken['value'] = { name: fn, parameters: [] };
 
   const open = Lexer.OPEN(value, index);
   if (open) {
     index = open;
-    tokenValue.parameters = [];
     const param = Expressions.parameterName(value, index);
     if (!param) {
       return;
@@ -1259,7 +1364,7 @@ export function qualifiedFunctionName(
   );
 }
 
-export function skiptoken(value: SourceArray, index: number): Lexer.Token {
+export function skiptoken(value: SourceArray, index: number): Lexer.Token<Lexer.TokenType.SkipToken> {
   const start = index;
   if (Utils.equals(value, index, '%24skiptoken')) {
     index += 12;
@@ -1295,7 +1400,10 @@ export function skiptoken(value: SourceArray, index: number): Lexer.Token {
   );
 }
 
-export function aliasAndValue(value: SourceArray, index: number): Lexer.Token {
+export function aliasAndValue(
+  value: SourceArray,
+  index: number
+): Lexer.Token<Lexer.TokenType.AliasAndValue> {
   const alias = Expressions.parameterAlias(value, index);
   if (!alias) {
     return;

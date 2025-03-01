@@ -1,0 +1,121 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Parser should instantiate odata parser 1`] = `
+Token {
+  "next": 35,
+  "position": 0,
+  "raw": "Categories/all(d:d/Title eq 'alma')",
+  "type": "CommonExpression",
+  "value": Token {
+    "next": 35,
+    "position": 0,
+    "raw": "Categories/all(d:d/Title eq 'alma')",
+    "type": "FirstMemberExpression",
+    "value": Token {
+      "next": 35,
+      "position": 0,
+      "raw": "Categories/all(d:d/Title eq 'alma')",
+      "type": "MemberExpression",
+      "value": Token {
+        "next": 35,
+        "position": 0,
+        "raw": "Categories/all(d:d/Title eq 'alma')",
+        "type": "PropertyPathExpression",
+        "value": {
+          "current": Token {
+            "next": 10,
+            "position": 0,
+            "raw": "Categories",
+            "type": "ODataIdentifier",
+            "value": {
+              "name": "Categories",
+            },
+          },
+          "next": Token {
+            "next": 35,
+            "position": 10,
+            "raw": "/all(d:d/Title eq 'alma')",
+            "type": "CollectionPathExpression",
+            "value": Token {
+              "next": 35,
+              "position": 11,
+              "raw": "all(d:d/Title eq 'alma')",
+              "type": "AllExpression",
+              "value": {
+                "predicate": Token {
+                  "next": 34,
+                  "position": 17,
+                  "raw": "d/Title eq 'alma'",
+                  "type": "LambdaPredicateExpression",
+                  "value": Token {
+                    "next": 34,
+                    "position": 17,
+                    "raw": "d/Title eq 'alma'",
+                    "type": "EqualsExpression",
+                    "value": {
+                      "left": Token {
+                        "next": 24,
+                        "position": 17,
+                        "raw": "d/Title",
+                        "type": "FirstMemberExpression",
+                        "value": [
+                          Token {
+                            "next": 18,
+                            "position": 17,
+                            "raw": "d",
+                            "type": "LambdaVariableExpression",
+                            "value": {
+                              "name": "d",
+                            },
+                          },
+                          Token {
+                            "next": 24,
+                            "position": 19,
+                            "raw": "Title",
+                            "type": "MemberExpression",
+                            "value": Token {
+                              "next": 24,
+                              "position": 19,
+                              "raw": "Title",
+                              "type": "PropertyPathExpression",
+                              "value": Token {
+                                "next": 24,
+                                "position": 19,
+                                "raw": "Title",
+                                "type": "ODataIdentifier",
+                                "value": {
+                                  "name": "Title",
+                                },
+                              },
+                            },
+                          },
+                        ],
+                      },
+                      "right": Token {
+                        "next": 34,
+                        "position": 28,
+                        "raw": "'alma'",
+                        "type": "Literal",
+                        "value": "Edm.String",
+                      },
+                    },
+                  },
+                },
+                "variable": Token {
+                  "next": 16,
+                  "position": 15,
+                  "raw": "d",
+                  "type": "LambdaVariableExpression",
+                  "value": {
+                    "name": "d",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
